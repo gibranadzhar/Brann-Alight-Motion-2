@@ -1,0 +1,36 @@
+[
+  {
+    "id": "mspe2co43058dc",
+    "name": "alwayscodex Bot",
+    "token": "8672100802:AAHnS-_MwAhk7w2G7PyI_N7ILlby9UayxYw",
+    "ownerId": "5323386592",
+    "apiKey": "Codex-E8B782D6-70E77ED4-AAA52444-21B3CB9D",
+    "deployedBy": "alwayscodex",
+    "me": {
+      "id": 8672100802,
+      "username": "alightmotion_ac_bot",
+      "first_name": "alightmotionbot"
+    },
+    "status": "online",
+    "error": null,
+    "createdAt": "2026-08-12T01:06:34.276Z",
+    "startedAt": "2026-09-04T22:40:07.494Z"
+  },
+  {
+    "id": "mtbdorp2f20d8a",
+    "name": "kyra Bot",
+    "token": "8926727555:AAGuCMjv98F7OW6USOiuW9T4K8KQWTWEuuk",
+    "ownerId": "7688006329",
+    "apiKey": "Codex337b29989f6b736cc3a7c491c2923c9",
+    "deployedBy": "kyra",
+    "me": {
+      "id": 8926727555,
+      "username": "Kyverse_bot",
+      "first_name": "ky"
+    },
+    "status": "error",
+    "error": "Token sedang dipakai instance/bot lain (409). Stop bot lain dengan token ini.",
+    "createdAt": "2026-08-27T10:26:56.439Z",
+    "startedAt": "2026-08-31T09:49:01.757Z"
+  }
+]

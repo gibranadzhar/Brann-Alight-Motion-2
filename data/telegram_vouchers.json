@@ -1,0 +1,170 @@
+{
+  "BBCA001": {
+    "quota": 0,
+    "usedBy": [
+      "5323386592"
+    ]
+  },
+  "BBCA002": {
+    "quota": 0,
+    "usedBy": [
+      "5323386592"
+    ]
+  },
+  "17AGUSTUS001": {
+    "quota": 10,
+    "usedBy": []
+  },
+  "17AGUSTUS002": {
+    "quota": 10,
+    "usedBy": []
+  },
+  "17AGUSTUS003": {
+    "quota": 10,
+    "usedBy": []
+  },
+  "17AGUSTUS004": {
+    "quota": 10,
+    "usedBy": []
+  },
+  "17AGUSTUS005": {
+    "quota": 10,
+    "usedBy": []
+  },
+  "17AGUSTUS006": {
+    "quota": 10,
+    "usedBy": []
+  },
+  "17AGUSTUS007": {
+    "quota": 9,
+    "usedBy": [
+      "8171618128"
+    ]
+  },
+  "17AGUSTUS008": {
+    "quota": 9,
+    "usedBy": [
+      "8171618128"
+    ]
+  },
+  "17AGUSTUS009": {
+    "quota": 9,
+    "usedBy": [
+      "8171618128"
+    ]
+  },
+  "17AGUSTUS010": {
+    "quota": 9,
+    "usedBy": [
+      "8171618128"
+    ]
+  },
+  "17AGUSTUS011": {
+    "quota": 9,
+    "usedBy": [
+      "8171618128"
+    ]
+  },
+  "17AGUSTUS012": {
+    "quota": 9,
+    "usedBy": [
+      "8171618128"
+    ]
+  },
+  "17AGUSTUS013": {
+    "quota": 9,
+    "usedBy": [
+      "8171618128"
+    ]
+  },
+  "17AGUSTUS014": {
+    "quota": 9,
+    "usedBy": [
+      "8171618128"
+    ]
+  },
+  "17AGUSTUS015": {
+    "quota": 9,
+    "usedBy": [
+      "8171618128"
+    ]
+  },
+  "17AGUSTUS016": {
+    "quota": 9,
+    "usedBy": [
+      "8171618128"
+    ]
+  },
+  "17AGUSTUS017": {
+    "quota": 9,
+    "usedBy": [
+      "8171618128"
+    ]
+  },
+  "21AGUS001": {
+    "quota": 293,
+    "usedBy": [
+      "6791511517",
+      "8764920243",
+      "8764920243",
+      "8764920243",
+      "8764920243",
+      "8764920243",
+      "8735293412"
+    ]
+  },
+  "21AGUS002": {
+    "quota": 299,
+    "usedBy": [
+      "6791511517"
+    ]
+  },
+  "21AGUS003": {
+    "quota": 299,
+    "usedBy": [
+      "6791511517"
+    ]
+  },
+  "21AGUS004": {
+    "quota": 299,
+    "usedBy": [
+      "6791511517"
+    ]
+  },
+  "21AGUS005": {
+    "quota": 297,
+    "usedBy": [
+      "6791511517",
+      "8764920243",
+      "8735293412"
+    ]
+  },
+  "abcd001": {
+    "quota": 5,
+    "usedBy": []
+  },
+  "abcd002": {
+    "quota": 5,
+    "usedBy": []
+  },
+  "abcd003": {
+    "quota": 5,
+    "usedBy": []
+  },
+  "abcd004": {
+    "quota": 5,
+    "usedBy": []
+  },
+  "abcd005": {
+    "quota": 5,
+    "usedBy": []
+  },
+  "abcd006": {
+    "quota": 5,
+    "usedBy": []
+  },
+  "abcd007": {
+    "quota": 5,
+    "usedBy": []
+  }
+}

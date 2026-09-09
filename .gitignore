@@ -1,0 +1,25 @@
+# ============ Dependencies ============
+node_modules/
+
+# ============ Logs & debug ============
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+*.log
+*.tmp
+
+# ============ OS / editor ============
+.DS_Store
+Thumbs.db
+*.swp
+.idea/
+.vscode/
+
+# ============ STATE RUNTIME — SENSITIF ============
+# Berisi data user, hash password, sesi login, riwayat, dll.
+# ⚠️ JANGAN di-upload ke git. Aktifkan dengan menghapus tanda #:
+# data/
+
+# Local merchant / session secrets
+gopay/token.txt
+canva_session.json

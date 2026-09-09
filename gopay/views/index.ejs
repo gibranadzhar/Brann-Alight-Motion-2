@@ -1,0 +1,888 @@
+<!DOCTYPE html>    
+<html lang="id">    
+<head>    
+    <meta charset="UTF-8">    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">    
+    <title>Codex X Gopay Merchant</title>    
+    <script src="https://cdn.tailwindcss.com"></script>    
+    <script src="https://unpkg.com/lucide@latest"></script>    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700;900&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-deep: #FDF6E9;
+            --card-bg: #FFFFFF;
+            --ink: #0A0A0A;
+            --text-secondary: #45403A;
+            --accent-cyan: #2B5FFF;
+            --accent-magenta: #FF3EA5;
+            --accent-emerald: #00C853;
+            --accent-amber: #FF7A00;
+            --accent-blue: #2B5FFF;
+            --accent-rose: #FF3B3B;
+            --accent-yellow: #FFDE59;
+            --terminal-bg: #0A0A0A;
+            --terminal-text: #6CFFB0;
+            --shadow-color: #0A0A0A;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background-color: var(--bg-deep);
+            background-image:
+                linear-gradient(var(--ink) 2px, transparent 2px),
+                linear-gradient(90deg, var(--ink) 2px, transparent 2px);
+            background-size: 42px 42px;
+            background-position: -1px -1px;
+            background-attachment: fixed;
+            min-height: 100vh;
+            color: var(--ink);
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            margin: 0;
+            opacity: 1;
+        }
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-color: rgba(253, 246, 233, 0.86);
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        h1, h2, .font-display, nav span.font-black {
+            font-family: 'Space Grotesk', 'Inter', sans-serif;
+        }
+
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .custom-scrollbar::-webkit-scrollbar { width: 8px; height: 8px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: var(--ink); border-radius: 0; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #333; }
+
+        .premium-card {
+            background: var(--card-bg);
+            border: 3px solid var(--ink);
+            border-radius: 4px;
+            box-shadow: 8px 8px 0 0 var(--shadow-color);
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+            animation: cardAppear 0.4s ease forwards;
+            position: relative;
+            overflow: hidden;
+        }
+        .premium-card:hover {
+            transform: translate(-3px, -3px);
+            box-shadow: 11px 11px 0 0 var(--shadow-color);
+        }
+        .premium-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 10px;
+            background: repeating-linear-gradient(45deg, var(--ink), var(--ink) 8px, transparent 8px, transparent 16px);
+            opacity: 0.08;
+            pointer-events: none;
+        }
+
+        @keyframes cardAppear {
+            from { opacity: 0; transform: translate(0, 18px); }
+            to { opacity: 1; transform: translate(0, 0); }
+        }
+
+        .glass-input {
+            background: #FFFFFF;
+            border: 3px solid var(--ink);
+            border-radius: 4px;
+            transition: box-shadow 0.15s ease, transform 0.15s ease;
+            overflow: hidden;
+            box-shadow: 4px 4px 0 0 var(--shadow-color);
+        }
+        .glass-input:focus-within {
+            transform: translate(-2px, -2px);
+            box-shadow: 6px 6px 0 0 var(--accent-cyan);
+        }
+        .glass-input input {
+            background: transparent;
+            border: none;
+            outline: none;
+            font-family: 'JetBrains Mono', 'Fira Code', monospace;
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--ink);
+            padding: 18px 0;
+            width: 100%;
+        }
+        .glass-input input::placeholder {
+            color: #A8A29A;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            letter-spacing: -0.01em;
+        }
+        .glass-input .param-label {
+            font-family: 'JetBrains Mono', 'Fira Code', monospace;
+            font-size: 0.875rem;
+            font-weight: 800;
+            color: var(--ink);
+            white-space: nowrap;
+            user-select: none;
+            letter-spacing: -0.01em;
+            padding-right: 4px;
+        }
+
+        .api-terminal {
+            background: var(--terminal-bg);
+            background-image:
+                linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+            background-size: 20px 20px;
+            color: var(--terminal-text);
+            font-family: 'JetBrains Mono', 'Fira Code', monospace;
+            border: 3px solid var(--ink);
+            border-radius: 4px;
+            box-shadow: 6px 6px 0 0 var(--shadow-color);
+            position: relative;
+        }
+        .api-terminal .dots {
+            position: absolute;
+            top: 14px;
+            left: 16px;
+            display: flex;
+            gap: 9px;
+            z-index: 2;
+        }
+        .api-terminal .dots span {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: block;
+            border: 2px solid var(--ink);
+        }
+        .api-terminal .dots span:nth-child(1) { background: var(--accent-rose); }
+        .api-terminal .dots span:nth-child(2) { background: var(--accent-amber); }
+        .api-terminal .dots span:nth-child(3) { background: var(--accent-emerald); }
+        .api-terminal pre {
+            padding-top: 36px;
+            scrollbar-width: thin;
+            scrollbar-color: #444 transparent;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+        .api-terminal pre::-webkit-scrollbar { width: 6px; height: 6px; }
+        .api-terminal pre::-webkit-scrollbar-thumb { background: #444; border-radius: 0; }
+
+        .endpoint-badge {
+            font-size: 0.75rem;
+            font-weight: 800;
+            letter-spacing: 0.03em;
+            text-transform: uppercase;
+            padding: 7px 14px;
+            border-radius: 4px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            border: 2.5px solid var(--ink);
+            box-shadow: 3px 3px 0 0 var(--shadow-color);
+            color: var(--ink) !important;
+        }
+        .badge-cyan { background: #B7C8FF; }
+        .badge-fuchsia { background: #FFC2E4; }
+        .badge-amber { background: #FFD199; }
+        .badge-emerald { background: #A8F2C0; }
+        .badge-blue { background: #B7C8FF; }
+
+        .btn-primary {
+            background: var(--accent-yellow);
+            color: var(--ink);
+            font-weight: 800;
+            font-size: 1rem;
+            border-radius: 4px;
+            padding: 18px 28px;
+            transition: transform 0.12s ease, box-shadow 0.12s ease;
+            border: 3px solid var(--ink);
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            letter-spacing: -0.01em;
+            width: 100%;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 6px 6px 0 0 var(--shadow-color);
+        }
+        .btn-primary:hover {
+            background: #FFE98C;
+            transform: translate(-2px, -2px);
+            box-shadow: 8px 8px 0 0 var(--shadow-color);
+        }
+        .btn-primary:active {
+            transform: translate(4px, 4px);
+            box-shadow: 2px 2px 0 0 var(--shadow-color);
+        }
+
+        .btn-copy {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 11px 20px;
+            font-size: 0.8125rem;
+            font-weight: 700;
+            letter-spacing: 0.01em;
+            border-radius: 4px;
+            background: #FFFFFF;
+            border: 2.5px solid var(--ink);
+            color: var(--ink);
+            cursor: pointer;
+            transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.12s ease;
+            white-space: nowrap;
+            font-family: 'Inter', sans-serif;
+            box-shadow: 3px 3px 0 0 var(--shadow-color);
+        }
+        .btn-copy:hover {
+            background: var(--accent-cyan);
+            color: #FFFFFF;
+            transform: translate(-1px, -1px);
+            box-shadow: 4px 4px 0 0 var(--shadow-color);
+        }
+        .btn-copy:active {
+            transform: translate(3px, 3px);
+            box-shadow: 0 0 0 0 var(--shadow-color);
+        }
+        .btn-copy.copied {
+            background: var(--accent-emerald);
+            color: var(--ink);
+            animation: copyPulse 0.5s ease;
+        }
+        @keyframes copyPulse {
+            0%, 100% { transform: translate(-1px, -1px); }
+            50% { transform: translate(-1px, -1px) scale(1.08); }
+        }
+
+        .copy-result-btn {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            z-index: 5;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 14px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 0.01em;
+            border-radius: 4px;
+            background: #1A1A1A;
+            border: 2px solid #6CFFB0;
+            color: #6CFFB0;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            font-family: 'Inter', sans-serif;
+        }
+        .copy-result-btn:hover {
+            background: #6CFFB0;
+            color: #0A0A0A;
+        }
+        .copy-result-btn.copied {
+            background: var(--accent-emerald);
+            border-color: var(--ink);
+            color: var(--ink);
+        }
+
+        .toast-container {
+            position: fixed;
+            bottom: 32px;
+            right: 32px;
+            z-index: 9999;
+            pointer-events: none;
+        }
+        .toast {
+            background: var(--accent-yellow);
+            color: var(--ink);
+            font-size: 0.9375rem;
+            font-weight: 800;
+            padding: 16px 26px;
+            border-radius: 4px;
+            border: 3px solid var(--ink);
+            box-shadow: 6px 6px 0 0 var(--shadow-color);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            opacity: 0;
+            transform: translate(10px, 18px);
+            transition: all 0.3s cubic-bezier(0.22, 0.61, 0.36, 1);
+            pointer-events: auto;
+        }
+        .toast.show {
+            opacity: 1;
+            transform: translate(0, 0);
+        }
+
+        footer {
+            border-top: 3px solid var(--ink);
+            background: #FFFFFF;
+        }
+
+        /* Password Modal Styling */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.show {
+            display: flex;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal-content {
+            background: var(--card-bg);
+            border: 3px solid var(--ink);
+            border-radius: 4px;
+            padding: 32px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 12px 12px 0 0 var(--shadow-color);
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .modal-header h2 {
+            font-size: 1.5rem;
+            font-weight: 900;
+            margin: 0;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--ink);
+        }
+
+        .btn-token-setup {
+            background: var(--accent-cyan);
+            color: #FFFFFF;
+            font-weight: 800;
+            padding: 16px 24px;
+            border: 3px solid var(--accent-cyan);
+            border-radius: 4px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.15s ease;
+            box-shadow: 4px 4px 0 0 var(--shadow-color);
+        }
+
+        .btn-token-setup:hover {
+            background: var(--accent-blue);
+            border-color: var(--accent-blue);
+            transform: translate(-2px, -2px);
+            box-shadow: 6px 6px 0 0 var(--shadow-color);
+        }
+    </style>
+</head>    
+<body class="antialiased">    
+    
+    <nav class="sticky top-0 z-50 w-full" style="background: #FFFFFF; border-bottom: 3px solid var(--ink);">    
+        <div class="max-w-6xl mx-auto px-5 md:px-8 h-20 flex items-center justify-between">    
+            <div class="flex items-center gap-4">    
+                <div class="w-11 h-11 flex items-center justify-center" style="background: var(--accent-yellow); border: 3px solid var(--ink); border-radius: 4px; box-shadow: 4px 4px 0 0 var(--shadow-color);">    
+                    <i data-lucide="terminal" class="w-6 h-6 text-black"></i>    
+                </div>    
+                <span class="font-black text-2xl tracking-tight text-black">    
+                    GoMerch <span style="background: var(--accent-magenta); padding: 0 8px; border: 2px solid var(--ink); border-radius: 4px; display: inline-block;">API Explorer</span>    
+                </span>    
+            </div>    
+            <div class="flex items-center gap-4">    
+                <div class="hidden sm:flex items-center gap-2 px-4 py-2" style="background: var(--accent-emerald); border: 2.5px solid var(--ink); border-radius: 4px;">    
+                    <span class="relative flex h-3 w-3">    
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full" style="background: var(--ink); opacity: 0.5;"></span>    
+                        <span class="relative inline-flex rounded-full h-3 w-3" style="background: var(--ink);"></span>    
+                    </span>    
+                    <span class="text-[0.7rem] font-black uppercase tracking-widest" style="color: var(--ink);">Live Server</span>    
+                </div>    
+            </div>    
+        </div>    
+    </nav>    
+    
+    <main class="max-w-6xl mx-auto p-4 sm:p-6 md:p-10 pb-32">    
+        <div class="space-y-6 sm:space-y-8">    
+        
+            <!-- Token Setup Button -->
+            <div class="premium-card p-6 sm:p-8">
+                <div class="flex items-center justify-between gap-4 flex-wrap">
+                    <div>
+                        <h2 class="text-2xl font-black mb-2">⚡ Auto Token Manager</h2>
+                        <p class="text-gray-600 text-sm">Setup token sekali, auto-refresh setiap 15 menit. API auto-managed tanpa perlu pass token di setiap request!</p>
+                    </div>
+                    <button class="btn-token-setup" onclick="openPasswordModal()">
+                        <i data-lucide="key" class="w-5 h-5"></i>
+                        Setup Tokens
+                    </button>
+                </div>
+            </div>
+
+            <div class="premium-card p-6 sm:p-8" data-endpoint="api-validate">
+                <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
+                    <div class="flex items-center gap-4 flex-wrap">
+                        <span class="endpoint-badge badge-cyan">
+                            <i data-lucide="arrow-right-circle" class="w-4 h-4"></i> GET
+                        </span>
+                        <code class="text-lg font-bold text-black tracking-tight">/api/validate</code>
+                    </div>
+                    <button onclick="copyEndpointWithParams('api-validate', '/api/validate', ['token'])" class="btn-copy" id="copy-btn-api-validate">
+                        <i data-lucide="copy" class="w-4 h-4"></i>
+                    </button>
+                </div>
+                <div class="flex flex-col lg:flex-row gap-6 items-stretch">
+                    <div class="w-full lg:w-1/2 space-y-4 flex flex-col">
+                        <div class="glass-input flex items-center px-5">
+                            <span class="param-label min-w-[62px] text-blue-700">token=</span>
+                            <input type="text" id="param-api-validate-token" placeholder="access_token_anda" class="w-full bg-transparent outline-none py-5 text-lg">
+                        </div>
+                        <button onclick="runApiTest('/api/validate', {token: getVal('param-api-validate-token')}, 'res-validate')" class="btn-primary mt-auto py-5">
+                            <i data-lucide="play" class="w-5 h-5"></i> <span>Jalankan</span>
+                        </button>
+                    </div>
+                    <div class="w-full lg:w-1/2 min-h-[220px]">
+                        <div class="api-terminal relative h-full min-h-[220px] rounded-2xl">
+                            <div class="dots"><span></span><span></span><span></span></div>
+                            <button class="copy-result-btn" onclick="copyResult('res-validate')">
+                                <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+                            </button>
+                            <pre id="res-validate" class="p-5 sm:p-6 h-full overflow-auto custom-scrollbar" style="padding-top: 42px;">// Response JSON</pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+                
+            <div class="premium-card p-6 sm:p-8" data-endpoint="auth-otp">    
+                <div class="flex flex-wrap items-center justify-between gap-4 mb-6">    
+                    <div class="flex items-center gap-4 flex-wrap">    
+                        <span class="endpoint-badge badge-cyan">    
+                            <i data-lucide="arrow-right-circle" class="w-4 h-4"></i> GET    
+                        </span>    
+                        <code class="text-lg font-bold text-black tracking-tight">/auth/otp</code>    
+                    </div>    
+                    <button onclick="copyEndpointWithParams('auth-otp', '/auth/otp', ['phone'])" class="btn-copy" id="copy-btn-auth-otp">    
+                        <i data-lucide="copy" class="w-4 h-4"></i>    
+                    </button>    
+                </div>    
+                <div class="flex flex-col lg:flex-row gap-6 items-stretch">    
+                    <div class="w-full lg:w-1/2 space-y-4 flex flex-col">    
+                        <div class="glass-input flex items-center px-5">    
+                            <span class="param-label min-w-[60px] text-blue-700">phone=</span>    
+                            <input type="text" id="param-auth-otp-phone" placeholder="628xxxxxxxx" class="w-full bg-transparent outline-none py-5 text-lg">    
+                        </div>    
+                        <button onclick="runApiTest('/auth/otp', {phone: getVal('param-auth-otp-phone')}, 'res-otp')" class="btn-primary mt-auto py-5">    
+                            <i data-lucide="play" class="w-5 h-5"></i> <span>Jalankan</span>    
+                        </button>    
+                    </div>    
+                    <div class="w-full lg:w-1/2 min-h-[180px]">    
+                        <div class="api-terminal relative h-full min-h-[180px] rounded-2xl">    
+                            <div class="dots"><span></span><span></span><span></span></div>    
+                            <button class="copy-result-btn" onclick="copyResult('res-otp')">    
+                                <i data-lucide="copy" class="w-3.5 h-3.5"></i>    
+                            </button>    
+                            <pre id="res-otp" class="p-5 sm:p-6 h-full overflow-auto custom-scrollbar" style="padding-top: 42px;">// Response JSON</pre>    
+                        </div>    
+                    </div>    
+                </div>    
+            </div>    
+    
+            <div class="premium-card p-6 sm:p-8" data-endpoint="auth-verify">    
+                <div class="flex flex-wrap items-center justify-between gap-4 mb-6">    
+                    <div class="flex items-center gap-4 flex-wrap">    
+                        <span class="endpoint-badge badge-fuchsia">    
+                            <i data-lucide="arrow-right-circle" class="w-4 h-4"></i> GET    
+                        </span>    
+                        <code class="text-lg font-bold text-black tracking-tight">/auth/verify</code>    
+                    </div>    
+                    <button onclick="copyEndpointWithParams('auth-verify', '/auth/verify', ['otp', 'otp_token'])" class="btn-copy" id="copy-btn-auth-verify">    
+                        <i data-lucide="copy" class="w-4 h-4"></i>    
+                    </button>    
+                </div>    
+                <div class="flex flex-col lg:flex-row gap-6 items-stretch">    
+                    <div class="w-full lg:w-1/2 space-y-4 flex flex-col">    
+                        <div class="glass-input flex items-center px-5">    
+                            <span class="param-label min-w-[46px] text-pink-700">otp=</span>    
+                            <input type="text" id="param-auth-verify-otp" placeholder="1234" class="w-full bg-transparent outline-none py-5 text-lg">    
+                        </div>    
+                        <div class="glass-input flex items-center px-5">    
+                            <span class="param-label min-w-[98px] text-pink-700">otp_token=</span>    
+                            <input type="text" id="param-auth-verify-otp_token" placeholder="token_dari_request_otp" class="w-full bg-transparent outline-none py-5 text-lg">    
+                        </div>    
+                        <button onclick="runApiTest('/auth/verify', {otp: getVal('param-auth-verify-otp'), otp_token: getVal('param-auth-verify-otp_token')}, 'res-verify')" class="btn-primary mt-auto py-5">    
+                            <i data-lucide="play" class="w-5 h-5"></i> <span>Jalankan</span>    
+                        </button>    
+                    </div>    
+                    <div class="w-full lg:w-1/2 min-h-[220px]">    
+                        <div class="api-terminal relative h-full min-h-[220px] rounded-2xl">    
+                            <div class="dots"><span></span><span></span><span></span></div>    
+                            <button class="copy-result-btn" onclick="copyResult('res-verify')">    
+                                <i data-lucide="copy" class="w-3.5 h-3.5"></i>    
+                            </button>    
+                            <pre id="res-verify" class="p-5 sm:p-6 h-full overflow-auto custom-scrollbar" style="padding-top: 42px;">// Response JSON</pre>    
+                        </div>    
+                    </div>    
+                </div>    
+            </div>    
+    
+            <div class="premium-card p-6 sm:p-8" data-endpoint="api-history">    
+                <div class="flex flex-wrap items-center justify-between gap-4 mb-6">    
+                    <div class="flex items-center gap-4 flex-wrap">    
+                        <span class="endpoint-badge badge-amber">    
+                            <i data-lucide="arrow-right-circle" class="w-4 h-4"></i> GET    
+                        </span>    
+                        <code class="text-lg font-bold text-black tracking-tight">/api/history</code>    
+                    </div>    
+                    <button onclick="copyEndpointWithParams('api-history', '/api/history', ['token', 'start_time'])" class="btn-copy" id="copy-btn-api-history">    
+                        <i data-lucide="copy" class="w-4 h-4"></i>    
+                    </button>    
+                </div>    
+                <div class="flex flex-col lg:flex-row gap-6 items-stretch">    
+                    <div class="w-full lg:w-1/2 space-y-4 flex flex-col">    
+                        <div class="glass-input flex items-center px-5">    
+                            <span class="param-label min-w-[58px] text-orange-700">token=</span>    
+                            <input type="text" id="param-api-history-token" placeholder="access_token_anda" class="w-full bg-transparent outline-none py-5 text-lg">    
+                        </div>    
+                        <div class="glass-input flex items-center px-5">    
+                            <span class="param-label min-w-[98px]">start_time=</span>    
+                            <input type="text" id="param-api-history-start_time" placeholder="YYYY-MM-DD (opsional)" class="w-full bg-transparent outline-none py-5 text-lg">    
+                        </div>    
+                        <button onclick="runApiTest('/api/history', {token: getVal('param-api-history-token'), start_time: getVal('param-api-history-start_time')}, 'res-hist')" class="btn-primary mt-auto py-5">    
+                            <i data-lucide="play" class="w-5 h-5"></i> <span>Jalankan</span>    
+                        </button>    
+                    </div>    
+                    <div class="w-full lg:w-1/2 min-h-[220px]">    
+                        <div class="api-terminal relative h-full min-h-[220px] rounded-2xl">    
+                            <div class="dots"><span></span><span></span><span></span></div>    
+                            <button class="copy-result-btn" onclick="copyResult('res-hist')">    
+                                <i data-lucide="copy" class="w-3.5 h-3.5"></i>    
+                            </button>    
+                            <pre id="res-hist" class="p-5 sm:p-6 h-full overflow-auto custom-scrollbar" style="padding-top: 42px;">// Response JSON</pre>    
+                        </div>    
+                    </div>    
+                </div>    
+            </div>    
+    
+            <div class="premium-card p-6 sm:p-8" data-endpoint="api-qris-create">    
+                <div class="flex flex-wrap items-center justify-between gap-4 mb-6">    
+                    <div class="flex items-center gap-4 flex-wrap">    
+                        <span class="endpoint-badge badge-emerald">    
+                            <i data-lucide="arrow-right-circle" class="w-4 h-4"></i> GET    
+                        </span>    
+                        <code class="text-lg font-bold text-black tracking-tight">/api/qris/create</code>    
+                    </div>    
+                    <button onclick="copyEndpointWithParams('api-qris-create', '/api/qris/create', ['amount', 'static_qr'])" class="btn-copy" id="copy-btn-api-qris-create">    
+                        <i data-lucide="copy" class="w-4 h-4"></i>    
+                    </button>    
+                </div>    
+                <div class="flex flex-col lg:flex-row gap-6 items-stretch">    
+                    <div class="w-full lg:w-1/2 space-y-4 flex flex-col">    
+                        <div class="glass-input flex items-center px-5">    
+                            <span class="param-label min-w-[72px] text-emerald-700">amount=</span>    
+                            <input type="number" id="param-api-qris-create-amount" placeholder="50000" class="w-full bg-transparent outline-none py-5 text-lg">    
+                        </div>    
+                        <div class="glass-input flex items-center px-5">    
+                            <span class="param-label min-w-[82px] text-emerald-700">static_qr=</span>    
+                            <input type="text" id="param-api-qris-create-static_qr" placeholder="000201010212..." class="w-full bg-transparent outline-none py-5 text-lg">    
+                        </div>    
+                        <button onclick="runApiTest('/api/qris/create', {amount: getVal('param-api-qris-create-amount'), static_qr: getVal('param-api-qris-create-static_qr')}, 'res-qr')" class="btn-primary mt-auto py-5">    
+                            <i data-lucide="play" class="w-5 h-5"></i> <span>Jalankan</span>    
+                        </button>    
+                    </div>    
+                    <div class="w-full lg:w-1/2 min-h-[220px]">    
+                        <div class="api-terminal relative h-full min-h-[220px] rounded-2xl">    
+                            <div class="dots"><span></span><span></span><span></span></div>    
+                            <button class="copy-result-btn" onclick="copyResult('res-qr')">    
+                                <i data-lucide="copy" class="w-3.5 h-3.5"></i>    
+                            </button>    
+                            <pre id="res-qr" class="p-5 sm:p-6 h-full overflow-auto custom-scrollbar" style="padding-top: 42px;">// Response JSON</pre>    
+                        </div>    
+                    </div>    
+                </div>    
+            </div>    
+    
+            <div class="premium-card p-6 sm:p-8" data-endpoint="auth-refresh">    
+                <div class="flex flex-wrap items-center justify-between gap-4 mb-6">    
+                    <div class="flex items-center gap-4 flex-wrap">    
+                        <span class="endpoint-badge badge-blue">    
+                            <i data-lucide="arrow-right-circle" class="w-4 h-4"></i> GET    
+                        </span>    
+                        <code class="text-lg font-bold text-black tracking-tight">/auth/refresh/token</code>    
+                    </div>    
+                    <button onclick="copyEndpointWithParams('auth-refresh', '/auth/refresh/token', ['refresh_token'])" class="btn-copy" id="copy-btn-auth-refresh">    
+                        <i data-lucide="copy" class="w-4 h-4"></i>    
+                    </button>    
+                </div>    
+                <div class="flex flex-col lg:flex-row gap-6 items-stretch">    
+                    <div class="w-full lg:w-1/2 space-y-4 flex flex-col">    
+                        <div class="glass-input flex items-center px-5">    
+                            <span class="param-label min-w-[120px] text-blue-700">refresh_token=</span>    
+                            <input type="text" id="param-auth-refresh-refresh_token" placeholder="refresh_token_anda" class="w-full bg-transparent outline-none py-5 text-lg">    
+                        </div>    
+                        <button onclick="runApiTest('/auth/refresh/token', {refresh_token: getVal('param-auth-refresh-refresh_token')}, 'res-refresh')" class="btn-primary mt-auto py-5">    
+                            <i data-lucide="play" class="w-5 h-5"></i> <span>Jalankan</span>    
+                        </button>    
+                    </div>    
+                    <div class="w-full lg:w-1/2 min-h-[180px]">    
+                        <div class="api-terminal relative h-full min-h-[180px] rounded-2xl">    
+                            <div class="dots"><span></span><span></span><span></span></div>    
+                            <button class="copy-result-btn" onclick="copyResult('res-refresh')">    
+                                <i data-lucide="copy" class="w-3.5 h-3.5"></i>    
+                            </button>    
+                            <pre id="res-refresh" class="p-5 sm:p-6 h-full overflow-auto custom-scrollbar" style="padding-top: 42px;">// Response JSON</pre>    
+                        </div>    
+                    </div>    
+                </div>    
+            </div>    
+    
+        </div>    
+    </main>    
+    
+    <footer class="w-full py-8 px-4 text-center">    
+        <div class="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">    
+            <div class="flex items-center gap-2 text-sm font-semibold" style="color: var(--ink);">    
+                <i data-lucide="code-2" class="w-4 h-4 text-blue-700"></i>    
+                <span class="font-medium tracking-wide">2026 Development By <span class="font-bold text-black">Codex</span></span>    
+            </div>    
+            <div class="flex items-center gap-4 text-xs font-semibold" style="color: var(--text-secondary);">    
+                <span class="flex items-center gap-1"><i data-lucide="shield-check" class="w-3.5 h-3.5 text-emerald-700"></i> Secure API</span>    
+                <span class="flex items-center gap-1"><i data-lucide="zap" class="w-3.5 h-3.5 text-orange-700"></i> High Performance</span>    
+            </div>    
+        </div>    
+    </footer>    
+    
+    <div class="toast-container">    
+        <div id="toast" class="toast">    
+            <span class="toast-icon">✅</span>    
+            <span id="toast-msg">Copied!</span>    
+        </div>    
+    </div>    
+
+    <!-- Password Modal -->
+    <div id="passwordModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>🔐 Verify Password</h2>
+                <button class="modal-close" onclick="closePasswordModal()">×</button>
+            </div>
+            <form id="passwordForm" class="space-y-4" onsubmit="verifyPassword(event)">
+                <div>
+                    <label class="block text-sm font-bold mb-2">Masukan Password</label>
+                    <input type="password" id="passwordInput" placeholder="Enter password" class="w-full px-4 py-3 border-2 border-black rounded-sm focus:outline-none focus:border-blue-500" required>
+                </div>
+                <button type="submit" class="btn-primary w-full">
+                    <i data-lucide="lock" class="w-5 h-5"></i>
+                    Verify & Setup Tokens
+                </button>
+            </form>
+        </div>
+    </div>
+    
+    <script>    
+        lucide.createIcons();    
+    
+        const BASE_URL = window.location.origin;
+
+        // Password Modal Functions
+        function openPasswordModal() {
+            document.getElementById('passwordModal').classList.add('show');
+            document.getElementById('passwordInput').focus();
+        }
+
+        function closePasswordModal() {
+            document.getElementById('passwordModal').classList.remove('show');
+            document.getElementById('passwordForm').reset();
+        }
+
+        async function verifyPassword(e) {
+            e.preventDefault();
+            const password = document.getElementById('passwordInput').value;
+
+            try {
+                const response = await fetch('/api/auth/verify-password', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ password })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showToast('✅ Password verified! Redirecting to token setup...', '✅');
+                    closePasswordModal();
+                    setTimeout(() => {
+                        window.location.href = '/auth/token-setup';
+                    }, 1000);
+                } else {
+                    showToast('❌ ' + data.error, '❌');
+                }
+            } catch (e) {
+                showToast('❌ Error: ' + e.message, '❌');
+            }
+        }
+
+        // Close modal when clicking outside
+        document.getElementById('passwordModal')?.addEventListener('click', (e) => {
+            if (e.target.id === 'passwordModal') {
+                closePasswordModal();
+            }
+        });    
+    
+        function getVal(id) {    
+            const el = document.getElementById(id);    
+            return el ? el.value.trim() : '';    
+        }    
+    
+        let toastTimer;    
+        function showToast(message, icon = '✅') {    
+            const toast = document.getElementById('toast');    
+            const msg = document.getElementById('toast-msg');    
+            const iconEl = toast.querySelector('.toast-icon');    
+            iconEl.textContent = icon;    
+            msg.textContent = message;    
+            toast.classList.add('show');    
+            clearTimeout(toastTimer);    
+            toastTimer = setTimeout(() => {    
+                toast.classList.remove('show');    
+            }, 2400);    
+        }    
+    
+        function copyEndpointWithParams(endpointKey, path, paramNames) {    
+            const params = {};    
+            let filledCount = 0;    
+            paramNames.forEach(pName => {    
+                const inputId = `param-${endpointKey}-${pName}`;    
+                const val = getVal(inputId);    
+                params[pName] = val;     
+                if (val !== '') filledCount++;    
+            });    
+            const query = new URLSearchParams(params).toString();    
+            const fullUrl = query ? `${BASE_URL}${path}?${query}` : `${BASE_URL}${path}`;    
+            navigator.clipboard.writeText(fullUrl).then(() => {    
+                const btn = document.getElementById(`copy-btn-${endpointKey}`);    
+                if (btn) {    
+                    btn.classList.add('copied');    
+                    setTimeout(() => btn.classList.remove('copied'), 1500);    
+                }    
+                const suffix = filledCount > 0 ? ` (+ ${filledCount} param)` : '';    
+                showToast(`URL disalin${suffix}`, '📋');    
+            }).catch(() => {    
+                const ta = document.createElement('textarea');    
+                ta.value = fullUrl;    
+                ta.style.position = 'fixed'; ta.style.opacity = '0';    
+                document.body.appendChild(ta);    
+                ta.select();    
+                try { document.execCommand('copy'); showToast('URL disalin', '📋'); } catch (e) { showToast('Gagal menyalin', '⚠️'); }    
+                document.body.removeChild(ta);    
+            });    
+        }    
+    
+        function copyResult(preId) {    
+            const pre = document.getElementById(preId);    
+            if (!pre) return;    
+            const text = pre.innerText || pre.textContent;    
+            navigator.clipboard.writeText(text).then(() => {    
+                const terminal = pre.closest('.api-terminal');    
+                const btn = terminal ? terminal.querySelector('.copy-result-btn') : null;    
+                if (btn) {    
+                    btn.classList.add('copied');    
+                    setTimeout(() => btn.classList.remove('copied'), 1500);    
+                }    
+                showToast('Result disalin', '📋');    
+            }).catch(() => {    
+                const ta = document.createElement('textarea');    
+                ta.value = text;    
+                ta.style.position = 'fixed'; ta.style.opacity = '0';    
+                document.body.appendChild(ta);    
+                ta.select();    
+                try { document.execCommand('copy'); showToast('Result disalin', '📋'); } catch (e) { showToast('Gagal menyalin', '⚠️'); }    
+                document.body.removeChild(ta);    
+            });    
+        }    
+    
+        async function fetchGET(url, params = {}) {    
+            Object.keys(params).forEach(k => {    
+                if (params[k] === '' || params[k] === null || params[k] === undefined) delete params[k];    
+            });    
+            const query = new URLSearchParams(params).toString();    
+            const fullUrl = query ? `${url}?${query}` : url;    
+            try {    
+                const res = await fetch(fullUrl);    
+                const data = await res.json();    
+                return data;    
+            } catch (error) {    
+                return {    
+                    success: false,    
+                    error_type: "Network / CORS Error",    
+                    message: error.message,    
+                    attempted_url: fullUrl,    
+                    hint: "Pastikan backend server berjalan dan mengizinkan CORS."    
+                };    
+            }    
+        }    
+    
+        async function runApiTest(endpoint, params, resultElementId) {    
+            const resEl = document.getElementById(resultElementId);    
+            resEl.innerText = "// Loading...";    
+            resEl.style.color = '#fbbf24';    
+            try {    
+                const res = await fetchGET(endpoint, params);    
+                resEl.style.color = res.error_type === "Network / CORS Error" ? '#f87171' : '#b4f0c8';    
+                resEl.innerText = JSON.stringify(res, null, 2);    
+            } catch (e) {    
+                resEl.style.color = '#f87171';    
+                resEl.innerText = "// Error:\n" + e.message;    
+            }    
+        }    
+    
+        document.addEventListener('DOMContentLoaded', () => {    
+            lucide.createIcons();    
+        });    
+        const observer = new MutationObserver(() => { lucide.createIcons(); });    
+        observer.observe(document.getElementById('toast'), { childList: true, subtree: true });    
+    </script>    
+</body>    
+</html>    
