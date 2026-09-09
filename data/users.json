@@ -3200,7 +3200,7 @@
   "branndigitalhub": {
     "id": "mtk2sloua04cff",
     "username": "branndigitalhub",
-    "password": "scrypt$32768$8$1$fa7e63f81d59ce5de053631d26fa9c91$69d713a38819a8a19591527c6ce3fea003be18518497205fe013a090aa8b2853861e61059b9e8e6b49377862675c4ca0e262d5ad1f68d87c656fd708de28be81",
+    "password": "scrypt$32768$8$1$e3dad94b0c2f36be21f1b5dae3dc6287$9a62a541b3b0b7d31d865423705dc00ef341f91e1a19be37003f63f22d77556b7a452516d070daa2155bcec6dc98cbd88744628860b4191d5f5f211c6820c779",
     "role": "owner",
     "credits": 50,
     "creditResetDate": "2026-09-02",
