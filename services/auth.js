@@ -420,11 +420,54 @@ class AlightMotionService {
   // ==========================================
 
   async applyPremium(idToken) {
-    return {
-      success: false,
-      error:
-        "Premium activation is not configured for this Firebase service.",
-    };
+    try {
+      if (!idToken) {
+        return {
+          success: false,
+          error: "Firebase ID token tidak ditemukan.",
+        };
+      }
+
+      // BRANN entitlement flow:
+      // Firebase hanya dipakai untuk membuktikan kepemilikan email.
+      // Tidak ada lagi pemanggilan endpoint aktivasi Premium pihak ketiga.
+      const accountRes = await this._post(
+        `https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${this.API_KEY}`,
+        { idToken },
+        {
+          "Content-Type": "application/json",
+        },
+        30000
+      );
+
+      const firebaseUser = accountRes.data?.users?.[0] || null;
+      const email = String(firebaseUser?.email || "").trim().toLowerCase();
+
+      if (!email) {
+        return {
+          success: false,
+          error: "Email akun Firebase tidak ditemukan.",
+        };
+      }
+
+      const codeorder = this.generateCodeOrder();
+
+      return {
+        success: true,
+        provider: "brann",
+        email,
+        firebaseUid: firebaseUser.localId || null,
+        codeorder,
+        orderId: await this._ensureOrderId(),
+        activatedAt: new Date().toISOString(),
+        message: "BRANN Premium entitlement berhasil dibuat.",
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: this._errText(error),
+      };
+    }
   }
 }
 
