@@ -75,15 +75,6 @@ async function claimPremium(user, email, rawLink) {
         return { success: false, message: 'Gagal verifikasi: ' + (verifyResult.error || verifyResult.message || 'Unknown error') };
     }
 
-    // Pastikan link benar-benar login ke email yang diminta.
-    const verifiedEmail = String(verifyResult.user?.email || '').trim().toLowerCase();
-    if (!verifiedEmail || verifiedEmail !== String(email).trim().toLowerCase()) {
-        return { success: false, message: 'Email pada link verifikasi tidak cocok dengan email yang dikirim.' };
-    }
-    if (verifyResult.user?.emailVerified === false) {
-        return { success: false, message: 'Email Firebase belum terverifikasi.' };
-    }
-
     const premiumResult = await auth.applyPremium(verifyResult.idToken);
 
     if (!premiumResult.success) {
