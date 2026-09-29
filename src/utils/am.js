@@ -75,74 +75,39 @@ async function claimPremium(user, email, rawLink) {
         return { success: false, message: 'Gagal verifikasi: ' + (verifyResult.error || verifyResult.message || 'Unknown error') };
     }
 
-    // BRANN entitlement: Firebase hanya dipakai untuk membuktikan
-    // kepemilikan email. Tidak ada request ke license server pihak ketiga.
+    // Pastikan link benar-benar login ke email yang diminta.
+    const verifiedEmail = String(verifyResult.user?.email || '').trim().toLowerCase();
+    if (!verifiedEmail || verifiedEmail !== String(email).trim().toLowerCase()) {
+        return { success: false, message: 'Email pada link verifikasi tidak cocok dengan email yang dikirim.' };
+    }
+    if (verifyResult.user?.emailVerified === false) {
+        return { success: false, message: 'Email Firebase belum terverifikasi.' };
+    }
+
     const premiumResult = await auth.applyPremium(verifyResult.idToken);
 
     if (!premiumResult.success) {
         return { success: false, message: 'Gagal aktivasi premium: ' + (premiumResult.error || premiumResult.message || 'Unknown error') };
     }
 
-    const activatedEmail = String(premiumResult.email || email).trim().toLowerCase();
-    const orderId = premiumResult.orderId || generateOrderId();
-    const codeorder = premiumResult.codeorder || auth.generateCodeOrder();
-
-    const entitlements = readJSON('premium_entitlements', []);
-    const existing = entitlements.findIndex(function (x) {
-        return String(x.email || '').toLowerCase() === activatedEmail;
-    });
-    const entitlement = {
-        id: newId(),
-        username: user.username,
-        email: activatedEmail,
-        firebaseUid: premiumResult.firebaseUid || verifyResult.user?.localId || null,
-        provider: 'brann',
-        status: 'active',
-        codeorder: codeorder,
-        orderId: orderId,
-        activatedAt: premiumResult.activatedAt || nowISO(),
-        updatedAt: nowISO(),
-    };
-    if (existing >= 0) {
-        entitlement.id = entitlements[existing].id;
-        entitlements[existing] = Object.assign({}, entitlements[existing], entitlement);
-    } else {
-        entitlements.push(entitlement);
-    }
-    writeJSON('premium_entitlements', entitlements);
-
     const history = readJSON('history', []);
+    const orderId = premiumResult.orderId || generateOrderId();
     history.push({
         id: newId(),
         username: user.username,
-        email: activatedEmail,
+        email: email,
         orderId: orderId,
         status: 'success',
-        note: 'BRANN Premium entitlement diaktifkan',
-        codeorder: codeorder,
-        provider: 'brann',
+        note: 'Premium diaktifkan',
+        codeorder: premiumResult.codeorder,
         createdAt: fmtDateTime(),
     });
     writeJSON('history', history);
 
-    addActivationLog({
-        operator: user.username,
-        email: activatedEmail,
-        status: 'success',
-        note: 'BRANN Premium Active',
-        codeorder: codeorder,
-        createdAt: fmtDateTime()
-    });
-    addLog('[' + user.username + '] BRANN Premium entitlement sukses untuk ' + activatedEmail + ' (codeorder: ' + codeorder + ')');
+    addActivationLog({ operator: user.username, email: email, status: 'success', note: 'Licence Active', createdAt: fmtDateTime() });
+    addLog('[' + user.username + '] Aktivasi premium sukses untuk ' + email + ' (codeorder: ' + premiumResult.codeorder + ')');
 
-    return {
-        success: true,
-        message: 'BRANN Premium berhasil diaktifkan! Code order: ' + codeorder,
-        codeorder: codeorder,
-        orderId: orderId,
-        provider: 'brann',
-        email: activatedEmail
-    };
+    return { success: true, message: 'Premium berhasil diaktifkan! Code order: ' + premiumResult.codeorder, codeorder: premiumResult.codeorder, orderId: orderId };
 }
 
 /* ============================== AUTO GENERATOR ============================== */
