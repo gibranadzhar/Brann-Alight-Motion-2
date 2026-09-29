@@ -1,210 +1,430 @@
 import crypto from "crypto";
 
 /**
- * Alight Motion Premium — NATIVE service (tanpa axios, tanpa API perantara).
- * Port langsung dari /root/am/am.js (AlightMotionAuth): tembak langsung ke
+ * BRANN Firebase Authentication Service
  *
- *   SEND   : Google Identity Toolkit (createAuthUri + getOobConfirmationCode)
- *   VERIFY : emailLinkSignin + getAccountInfo
- *   PREMIUM: us-central1-alight-creative.cloudfunctions.net/verifyPurchase
+ * Firebase project:
+ *   bill-am
  *
- * Semua request pakai fetch bawaan Node (>=18) dengan AbortSignal.timeout.
- * Signature method dipertahankan identik agar seluruh pemanggil lama
- * (src/utils/am.js, services/bulk.js, worker CJS) tidak perlu berubah.
+ * Authentication:
+ *   Firebase Email Link / Passwordless Sign-in
+ *
+ * Node.js >= 18
+ *
+ * Railway Environment Variables:
+ *   FIREBASE_API_KEY
+ *   FIREBASE_CONTINUE_URL
  */
 
 class AlightMotionService {
-  /**
-   * AlightMotionService — native Google Play Billing verifikasi + premium activation.
-   * @param {string} [orderId] Order ID custom utk aktivasi premium (format GPA.xxxx...).
-   *                            Prioritas: argumen > prefix sequential > format GPA acak.
-   * @param {string} [prefix] Custom prefix dari user (VIP/Owner) — generate sequential: Prefix-0001, Prefix-0002, ...
-   * @param {Function} [getNextCounter] Async function(prefix) -> nextNumber (untuk persist counter)
-   */
   constructor(orderId, prefix, getNextCounter) {
-    // Kalau ada prefix custom, generate sequential: Prefix-0001, Prefix-0002, ...
+    // ==========================================
+    // ORDER ID
+    // ==========================================
+
     if (prefix && getNextCounter) {
       this._prefix = prefix;
       this._getNextCounter = getNextCounter;
-      this.ORDER_ID = null; // akan di-generate lazy saat pertama kali dipakai
+      this.ORDER_ID = null;
     } else {
-      this.ORDER_ID = String(orderId || "").trim() || this.defaultOrderId();
+      this.ORDER_ID =
+        String(orderId || "").trim() ||
+        this.defaultOrderId();
+
       this._prefix = null;
       this._getNextCounter = null;
     }
-    this.API_KEY = "AIzaSyDtG1AU22ErnQD60AzBAcaknySiz9_CEq0";
-    this.PRODUCT_ID = "am.full.sub.annual.19q4";
-    this.TOKEN = "mmgaobamlahbbeccfplmbkbb.AO-J1OzqG0or_GJJIx-ms8GrTm-jaglCRfhQSRPUZKpl2YspYS-oN7_94uv8RC5vQbvd_Ios2pPDStZ2n7F0hLE3FiOU7HS3R6Fquulv5xLXFECSv4ctElw";
-    this.SKU_TYPE = "subs";
-    this.FIREBASE_INSTANCE_ID_TOKEN = "cSDnCyp3T-uwp07z3tL86T:APA91bFkmvvsHw5nnqa1SBFci-99DRsKClLiETdRrVcJjS5yBx1v_FbCb1d8WhBuea_zmwnYBktyTIzcRhN4b6uNOUur9wPc0gKXmJDoZic0LhNq5V2s0xI";
-    this.HEADERS = {
-      "Content-Type": "application/json",
-      "X-Android-Package": "com.alightcreative.motion",
-      "X-Android-Cert": "ECA6BF91B8715A6F810ED0BBFC65B6CD578F52A8",
-      "User-Agent": "Dalvik/2.1.0 (Linux; U; Android 15; 23127PN0CC Build/BP1A.250505.005)",
-    };
+
+    // ==========================================
+    // FIREBASE BILL-AM
+    // ==========================================
+
+    this.API_KEY = process.env.FIREBASE_API_KEY;
+
+    this.CONTINUE_URL =
+      process.env.FIREBASE_CONTINUE_URL ||
+      "https://bill-am.firebaseapp.com";
+
+    if (!this.API_KEY) {
+      throw new Error(
+        "FIREBASE_API_KEY belum diset di Railway Variables."
+      );
+    }
   }
 
-  /** Default order id gaya Google Play: GPA.<4>.<4>.<4>.<5> */
+  // ==========================================
+  // DEFAULT ORDER ID
+  // ==========================================
+
   defaultOrderId() {
     const digit = (length) =>
       Math.floor(Math.random() * 9 + 1) +
-      Array.from({ length: length - 1 }, () => Math.floor(Math.random() * 10)).join('');
+      Array.from(
+        { length: length - 1 },
+        () => Math.floor(Math.random() * 10)
+      ).join("");
+
     return `GPA.${digit(4)}.${digit(4)}.${digit(4)}.${digit(5)}`;
   }
 
-  /** Generate next sequential order ID dari prefix custom (async karena counter di DB). */
+  // ==========================================
+  // ENSURE ORDER ID
+  // ==========================================
+
   async _ensureOrderId() {
-    if (this.ORDER_ID) return this.ORDER_ID; // sudah ada (custom orderId atau sudah di-generate)
+    if (this.ORDER_ID) {
+      return this.ORDER_ID;
+    }
+
     if (!this._prefix || !this._getNextCounter) {
       this.ORDER_ID = this.defaultOrderId();
       return this.ORDER_ID;
     }
-    const nextNum = await this._getNextCounter(this._prefix);
-    this.ORDER_ID = `${this._prefix}-${String(nextNum).padStart(4, '0')}`;
+
+    const nextNum =
+      await this._getNextCounter(this._prefix);
+
+    this.ORDER_ID =
+      `${this._prefix}-${String(nextNum).padStart(4, "0")}`;
+
     return this.ORDER_ID;
   }
 
-  /** Native fetch POST dengan timeout; melempar { response: { status, data } } saat gagal. */
-  async _post(url, body, headers, timeoutMs = 30000) {
+  // ==========================================
+  // HTTP POST
+  // ==========================================
+
+  async _post(
+    url,
+    body,
+    headers = {
+      "Content-Type": "application/json",
+    },
+    timeoutMs = 30000
+  ) {
     const res = await fetch(url, {
       method: "POST",
       headers,
       body: JSON.stringify(body),
       signal: AbortSignal.timeout(timeoutMs),
     });
+
     let data = null;
-    try { data = await res.json(); } catch (e) { /* body bukan JSON */ }
-    if (!res.ok) {
-      throw { response: { status: res.status, data: data ?? ("HTTP " + res.status) } };
+
+    try {
+      data = await res.json();
+    } catch {
+      // Response bukan JSON
     }
+
+    if (!res.ok) {
+      throw {
+        response: {
+          status: res.status,
+          data: data ?? `HTTP ${res.status}`,
+        },
+      };
+    }
+
     return { data };
   }
 
+  // ==========================================
+  // ERROR FORMATTER
+  // ==========================================
+
   _errText(error) {
-    if (error && error.response && error.response.data !== undefined) {
-      const d = error.response.data;
-      return typeof d === "object" ? JSON.stringify(d) : String(d);
+    if (
+      error &&
+      error.response &&
+      error.response.data !== undefined
+    ) {
+      const data = error.response.data;
+
+      return typeof data === "object"
+        ? JSON.stringify(data)
+        : String(data);
     }
-    return (error && error.message) || "Unknown error";
+
+    return error?.message || "Unknown error";
   }
 
+  // ==========================================
+  // CODE ORDER
+  // ==========================================
+
   generateCodeOrder() {
-    return crypto.randomInt(10000, 99999).toString();
+    return Math.floor(
+      10000 + Math.random() * 90000
+    ).toString();
   }
+
+  // ==========================================
+  // EXTRACT OOB CODE
+  // ==========================================
 
   extractOobCode(fullUrl) {
     if (!fullUrl) return null;
+
     try {
-      let cleanUrl = fullUrl.replace(/&amp;/g, "&");
-      try { cleanUrl = decodeURIComponent(cleanUrl); } catch (e) {}
+      let cleanUrl = String(fullUrl)
+        .replace(/&amp;/g, "&");
+
+      try {
+        cleanUrl = decodeURIComponent(cleanUrl);
+      } catch {
+        // Abaikan decode error
+      }
+
+      // ========================================
+      // NORMAL URL
+      // ========================================
 
       try {
         const urlObj = new URL(cleanUrl);
-        let oobCode = urlObj.searchParams.get("oobCode");
+
+        let oobCode =
+          urlObj.searchParams.get("oobCode");
+
+        // ======================================
+        // NESTED LINK
+        // ======================================
+
         if (!oobCode) {
-          const nestedLink = urlObj.searchParams.get("link") || urlObj.searchParams.get("q") || urlObj.searchParams.get("url");
+          const nestedLink =
+            urlObj.searchParams.get("link") ||
+            urlObj.searchParams.get("q") ||
+            urlObj.searchParams.get("url");
+
           if (nestedLink) {
             try {
-              const innerUrlObj = new URL(nestedLink);
-              oobCode = innerUrlObj.searchParams.get("oobCode");
-            } catch (e) {}
+              const innerUrlObj =
+                new URL(nestedLink);
+
+              oobCode =
+                innerUrlObj.searchParams.get(
+                  "oobCode"
+                );
+            } catch {
+              // Abaikan
+            }
           }
         }
-        if (oobCode) return oobCode.replace(/[^a-zA-Z0-9_-]/g, "");
-      } catch (e) {}
 
-      const match = cleanUrl.match(/[?&]oobCode=([a-zA-Z0-9_-]+)/i) || cleanUrl.match(/oobCode=([a-zA-Z0-9_-]+)/i);
-      if (match && match[1]) return match[1];
+        if (oobCode) {
+          return oobCode.replace(
+            /[^a-zA-Z0-9_-]/g,
+            ""
+          );
+        }
+      } catch {
+        // Lanjut ke regex
+      }
+
+      // ========================================
+      // REGEX FALLBACK
+      // ========================================
+
+      const match =
+        cleanUrl.match(
+          /[?&]oobCode=([^&]+)/i
+        ) ||
+        cleanUrl.match(
+          /oobCode=([^&]+)/i
+        );
+
+      if (match?.[1]) {
+        return match[1].replace(
+          /[^a-zA-Z0-9_-]/g,
+          ""
+        );
+      }
+
       return null;
-    } catch (e) {
+    } catch {
       return null;
     }
   }
+
+  // ==========================================
+  // SEND FIREBASE MAGIC LINK
+  // ==========================================
 
   async sendMagicLink(email) {
     try {
-      // Langkah 1: createAuthUri (validasi identifier)
-      await this._post(
-        `https://www.googleapis.com/identitytoolkit/v3/relyingparty/createAuthUri?key=${this.API_KEY}`,
-        { identifier: email, continueUri: "http://localhost" },
-        this.HEADERS
-      );
-      // Langkah 2: kirim magic link ke inbox email target
-      await this._post(
-        `https://www.googleapis.com/identitytoolkit/v3/relyingparty/getOobConfirmationCode?key=${this.API_KEY}`,
-        {
-          requestType: 6,
-          email: email,
-          androidInstallApp: true,
-          canHandleCodeInApp: true,
-          continueUrl: "https://alightcreative.com?ui_sid=0366624874&ui_sd=0",
-          iosBundleId: "com.alightcreative.motion",
-          androidPackageName: "com.alightcreative.motion",
-          androidMinimumVersion: "585",
-          clientType: "CLIENT_TYPE_ANDROID",
-        },
-        this.HEADERS
-      );
-      return { success: true, message: "Link berhasil dikirim." };
+      if (!email) {
+        throw new Error(
+          "Email wajib diisi."
+        );
+      }
+
+      const normalizedEmail =
+        String(email)
+          .trim()
+          .toLowerCase();
+
+      if (
+        !normalizedEmail.includes("@") ||
+        !normalizedEmail.includes(".")
+      ) {
+        throw new Error(
+          "Format email tidak valid."
+        );
+      }
+
+      const response =
+        await this._post(
+          `https://identitytoolkit.googleapis.com/v1/accounts:sendOobCode?key=${this.API_KEY}`,
+          {
+            requestType: "EMAIL_SIGNIN",
+            email: normalizedEmail,
+            continueUrl: this.CONTINUE_URL,
+            canHandleCodeInApp: true,
+          },
+          {
+            "Content-Type":
+              "application/json",
+          },
+          30000
+        );
+
+      return {
+        success: true,
+        message:
+          "Link verifikasi berhasil dikirim.",
+        data: response.data,
+      };
     } catch (error) {
-      return { success: false, error: this._errText(error) };
+      return {
+        success: false,
+        error: this._errText(error),
+      };
     }
   }
 
-  async verifyAndFetchProfile(email, rawLink) {
+  // ==========================================
+  // VERIFY FIREBASE EMAIL LINK
+  // ==========================================
+
+  async verifyAndFetchProfile(
+    email,
+    rawLink
+  ) {
     try {
-      const oobCode = this.extractOobCode(rawLink);
-      if (!oobCode) throw new Error("Gagal mengekstrak oobCode.");
+      if (!email) {
+        throw new Error(
+          "Email wajib diisi."
+        );
+      }
 
-      // Tukar oobCode -> idToken (sign-in via email link)
-      const signinRes = await this._post(
-        `https://www.googleapis.com/identitytoolkit/v3/relyingparty/emailLinkSignin?key=${this.API_KEY}`,
-        {
-          email: email,
-          oobCode: oobCode,
-          clientType: "CLIENT_TYPE_ANDROID",
-        },
-        this.HEADERS
-      );
+      if (!rawLink) {
+        throw new Error(
+          "Link verifikasi tidak ditemukan."
+        );
+      }
 
-      // Ambil profil akun
-      const accountRes = await this._post(
-        `https://www.googleapis.com/identitytoolkit/v3/relyingparty/getAccountInfo?key=${this.API_KEY}`,
-        { idToken: signinRes.data.idToken },
-        this.HEADERS
-      );
+      const normalizedEmail =
+        String(email)
+          .trim()
+          .toLowerCase();
 
-      return { success: true, idToken: signinRes.data.idToken, user: accountRes.data.users[0] };
+      // ========================================
+      // EXTRACT OOB CODE
+      // ========================================
+
+      const oobCode =
+        this.extractOobCode(rawLink);
+
+      if (!oobCode) {
+        throw new Error(
+          "Gagal mengekstrak kode verifikasi."
+        );
+      }
+
+      // ========================================
+      // SIGN IN
+      // ========================================
+
+      const signinRes =
+        await this._post(
+          `https://identitytoolkit.googleapis.com/v1/accounts:signInWithEmailLink?key=${this.API_KEY}`,
+          {
+            email: normalizedEmail,
+            oobCode,
+          },
+          {
+            "Content-Type":
+              "application/json",
+          },
+          30000
+        );
+
+      const idToken =
+        signinRes.data?.idToken;
+
+      if (!idToken) {
+        throw new Error(
+          "Firebase tidak mengembalikan ID token."
+        );
+      }
+
+      // ========================================
+      // ACCOUNT INFO
+      // ========================================
+
+      const accountRes =
+        await this._post(
+          `https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${this.API_KEY}`,
+          {
+            idToken,
+          },
+          {
+            "Content-Type":
+              "application/json",
+          },
+          30000
+        );
+
+      const user =
+        accountRes.data?.users?.[0] ||
+        null;
+
+      return {
+        success: true,
+        idToken,
+        refreshToken:
+          signinRes.data?.refreshToken ||
+          null,
+        expiresIn:
+          signinRes.data?.expiresIn ||
+          null,
+        user,
+      };
     } catch (error) {
-      return { success: false, error: this._errText(error) };
+      return {
+        success: false,
+        error: this._errText(error),
+      };
     }
   }
+
+  // ==========================================
+  // PREMIUM
+  // ==========================================
+  //
+  // Aktivasi Premium pihak ketiga tidak
+  // diarahkan ke Firebase bill-am.
+  //
+  // Method tetap ada agar pemanggil lama
+  // tidak mendapat "is not a function".
+  // ==========================================
 
   async applyPremium(idToken) {
-    try {
-      await this._ensureOrderId();
-      const codeorder = this.generateCodeOrder();
-      const url = "https://us-central1-alight-creative.cloudfunctions.net/verifyPurchase";
-      const headers = {
-        authorization: "Bearer " + idToken,
-        "firebase-instance-id-token": this.FIREBASE_INSTANCE_ID_TOKEN,
-        "content-type": "application/json; charset=utf-8",
-        "accept-encoding": "gzip",
-        "user-agent": "okhttp/3.12.1",
-      };
-      const response = await this._post(url, {
-        data: {
-          productId: this.PRODUCT_ID,
-          token: this.TOKEN,
-          skuType: this.SKU_TYPE,
-          orderId: this.ORDER_ID,
-        },
-      }, headers, 45000);
-      return { success: true, data: response.data, codeorder: codeorder };
-    } catch (error) {
-      return { success: false, error: this._errText(error) };
-    }
+    return {
+      success: false,
+      error:
+        "Premium activation is not configured for this Firebase service.",
+    };
   }
 }
 
