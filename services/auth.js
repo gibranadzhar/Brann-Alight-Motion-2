@@ -1,4 +1,7 @@
 import crypto from "crypto";
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
 
 /**
  * BRANN Firebase Authentication Service
@@ -41,14 +44,27 @@ class AlightMotionService {
 
     this.API_KEY = process.env.FIREBASE_API_KEY;
 
-    this.CONTINUE_URL =
+    this.CONTINUE_URL = String(
       process.env.FIREBASE_CONTINUE_URL ||
-      "https://bill-am.firebaseapp.com";
+      ""
+    ).trim();
 
     if (!this.API_KEY) {
-      throw new Error(
-        "FIREBASE_API_KEY belum diset di Railway Variables."
-      );
+      throw new Error("FIREBASE_API_KEY belum diset di Railway Variables.");
+    }
+
+    if (!this.CONTINUE_URL) {
+      throw new Error("FIREBASE_CONTINUE_URL belum diset di Railway Variables.");
+    }
+
+    let continueUrlObj;
+    try {
+      continueUrlObj = new URL(this.CONTINUE_URL);
+      if (continueUrlObj.protocol !== "https:") {
+        throw new Error("FIREBASE_CONTINUE_URL harus memakai HTTPS.");
+      }
+    } catch (e) {
+      throw new Error("FIREBASE_CONTINUE_URL tidak valid: " + e.message);
     }
   }
 
@@ -140,10 +156,12 @@ class AlightMotionService {
       error.response.data !== undefined
     ) {
       const data = error.response.data;
-
-      return typeof data === "object"
-        ? JSON.stringify(data)
-        : String(data);
+      if (data && typeof data === "object") {
+        const msg = data?.error?.message || data?.message;
+        if (msg) return String(msg);
+        return JSON.stringify(data);
+      }
+      return String(data);
     }
 
     return error?.message || "Unknown error";
@@ -279,7 +297,9 @@ class AlightMotionService {
             requestType: "EMAIL_SIGNIN",
             email: normalizedEmail,
             continueUrl: this.CONTINUE_URL,
-            canHandleCodeInApp: true,
+            // BRANN menerima/memproses link secara server-side/manual.
+            // Jangan paksa Android/iOS deep-link Alight Motion di sini.
+            canHandleCodeInApp: false,
           },
           {
             "Content-Type":
@@ -412,55 +432,72 @@ class AlightMotionService {
   // PREMIUM
   // ==========================================
   //
-  // Aktivasi Premium pihak ketiga tidak
-  // diarahkan ke Firebase bill-am.
-  //
-  // Method tetap ada agar pemanggil lama
-  // tidak mendapat "is not a function".
+  // Aktivasi entitlement BRANN sendiri.
+  // Tidak memanggil atau memodifikasi sistem lisensi pihak ketiga.
   // ==========================================
 
   async applyPremium(idToken) {
     try {
       if (!idToken) {
-        return {
-          success: false,
-          error: "Firebase ID token tidak ditemukan.",
-        };
+        throw new Error("ID token Firebase tidak tersedia.");
       }
 
-      // BRANN entitlement flow:
-      // Firebase hanya dipakai untuk membuktikan kepemilikan email.
-      // Tidak ada lagi pemanggilan endpoint aktivasi Premium pihak ketiga.
       const accountRes = await this._post(
         `https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${this.API_KEY}`,
         { idToken },
-        {
-          "Content-Type": "application/json",
-        },
+        { "Content-Type": "application/json" },
         30000
       );
 
-      const firebaseUser = accountRes.data?.users?.[0] || null;
-      const email = String(firebaseUser?.email || "").trim().toLowerCase();
-
-      if (!email) {
-        return {
-          success: false,
-          error: "Email akun Firebase tidak ditemukan.",
-        };
+      const user = accountRes.data?.users?.[0];
+      if (!user?.localId || !user?.email) {
+        throw new Error("Akun Firebase tidak ditemukan.");
       }
 
+      if (user.emailVerified === false) {
+        throw new Error("Email Firebase belum terverifikasi.");
+      }
+
+      // Entitlement milik BRANN sendiri. Ini TIDAK mengubah lisensi resmi
+      // aplikasi pihak ketiga; hanya mencatat hak Premium pada sistem BRANN.
+      const __filename = fileURLToPath(import.meta.url);
+      const __dirname = path.dirname(__filename);
+      const dataDir = path.join(__dirname, "..", "data");
+      const file = path.join(dataDir, "premium_entitlements.json");
+      fs.mkdirSync(dataDir, { recursive: true });
+
+      let entitlements = {};
+      try {
+        entitlements = JSON.parse(fs.readFileSync(file, "utf8"));
+      } catch {
+        entitlements = {};
+      }
+
+      const now = new Date();
+      const days = Math.max(1, parseInt(process.env.BRANN_PREMIUM_DAYS || "30", 10) || 30);
+      const expires = new Date(now.getTime() + days * 86400000);
       const codeorder = this.generateCodeOrder();
+      const orderId = await this._ensureOrderId();
+
+      const entitlement = {
+        uid: user.localId,
+        email: String(user.email).toLowerCase(),
+        codeorder,
+        orderId,
+        status: "active",
+        source: "firebase-email-link",
+        createdAt: now.toISOString(),
+        expiresAt: expires.toISOString(),
+      };
+
+      entitlements[user.localId] = entitlement;
+      fs.writeFileSync(file, JSON.stringify(entitlements, null, 2));
 
       return {
         success: true,
-        provider: "brann",
-        email,
-        firebaseUid: firebaseUser.localId || null,
         codeorder,
-        orderId: await this._ensureOrderId(),
-        activatedAt: new Date().toISOString(),
-        message: "BRANN Premium entitlement berhasil dibuat.",
+        orderId,
+        entitlement,
       };
     } catch (error) {
       return {
@@ -468,7 +505,6 @@ class AlightMotionService {
         error: this._errText(error),
       };
     }
-  }
-}
+  }}
 
 export default AlightMotionService;
