@@ -388,7 +388,55 @@ app.get('/api/history', async (req, res) => {
     }
 });
 
-// ⭐ AUTO-MANAGED HISTORY API - Per-API-Key Multi-Tenant Auto History
+// Helper untuk memperketat & memvalidasi transaksi QRIS yang valid & sukses
+function parseAndFilterQrisTransactions(hits = [], query = {}) {
+    return (hits || [])
+        .filter(item => {
+            if (!item || !item.id) return false;
+
+            // 1. Strict Payment Type (Hanya QRIS)
+            const paymentType = (item?.metadata?.transaction?.payment_type || '').toLowerCase();
+            if (paymentType !== 'qris') return false;
+
+            // 2. Strict Status (Wajib SUCCESS / SETTLED / COMPLETED)
+            const status = (item?.status || '').toUpperCase();
+            const isValidStatus = status === 'SUCCESS' || status === 'SETTLED' || status === 'COMPLETED';
+            if (!isValidStatus) return false;
+
+            const aspi = item.metadata?.provider_metadata?.aspi;
+            const amount = parseInt(aspi?.data?.amount || (item.amount ? item.amount / 100 : 0)) || 0;
+
+            // Optional amount query filter (?amount=50000)
+            if (query.amount && parseInt(query.amount) !== amount) {
+                return false;
+            }
+            // Optional min_amount / max_amount query filter
+            if (query.min_amount && amount < parseInt(query.min_amount)) return false;
+            if (query.max_amount && amount > parseInt(query.max_amount)) return false;
+
+            return true;
+        })
+        .map(item => {
+            const aspi = item.metadata?.provider_metadata?.aspi;
+            const rawAmount = parseInt(aspi?.data?.amount || (item.amount ? item.amount / 100 : 0)) || 0;
+
+            return {
+                id: item.id,
+                reference_id: item.reference_id,
+                status: item.status,
+                time: item.time,
+                amount: rawAmount,
+                issuer: aspi?.issuer || null,
+                acquirer: aspi?.acquirer || null,
+                merchant_name: aspi?.data?.merchant_name || null,
+                merchant_id: aspi?.data?.merchant_id || null,
+                merchant_city: aspi?.data?.merchant_city || null,
+                terminal_label: aspi?.data?.additional_data?.terminal_label || null
+            };
+        });
+}
+
+// ⭐ AUTO-MANAGED HISTORY API - Per-API-Key Multi-Tenant Auto History (Strict Security)
 const handleAutoHistory = async (req, res) => {
     try {
         const reqApiKey = req.params.apikey || req.query.apikey || req.body?.apikey || req.headers['x-api-key'];
@@ -417,7 +465,7 @@ const handleAutoHistory = async (req, res) => {
         const { accessToken, refreshToken } = userTokens;
 
         try {
-            // Try fetch dengan current token
+            // Fetch dengan current token
             const user = await sdk.getMe(accessToken);
 
             const defaultStartTime = new Date(
@@ -432,32 +480,7 @@ const handleAutoHistory = async (req, res) => {
                 startTime
             );
 
-            const data = (result.hits || [])
-                .filter(item =>
-                    item?.metadata?.transaction?.payment_type === 'qris'
-                )
-                .map(item => {
-                    const aspi = item.metadata?.provider_metadata?.aspi;
-
-                    return {
-                        id: item.id,
-                        reference_id: item.reference_id,
-                        status: item.status,
-                        time: item.time,
-
-                        amount: aspi?.data?.amount || 0,
-
-                        issuer: aspi?.issuer || null,
-                        acquirer: aspi?.acquirer || null,
-
-                        merchant_name: aspi?.data?.merchant_name || null,
-                        merchant_id: aspi?.data?.merchant_id || null,
-                        merchant_city: aspi?.data?.merchant_city || null,
-
-                        terminal_label:
-                            aspi?.data?.additional_data?.terminal_label || null
-                    };
-                });
+            const data = parseAndFilterQrisTransactions(result.hits, req.query);
 
             res.json({
                 success: true,
@@ -497,32 +520,7 @@ const handleAutoHistory = async (req, res) => {
                         startTime
                     );
 
-                    const data = (result.hits || [])
-                        .filter(item =>
-                            item?.metadata?.transaction?.payment_type === 'qris'
-                        )
-                        .map(item => {
-                            const aspi = item.metadata?.provider_metadata?.aspi;
-
-                            return {
-                                id: item.id,
-                                reference_id: item.reference_id,
-                                status: item.status,
-                                time: item.time,
-
-                                amount: aspi?.data?.amount || 0,
-
-                                issuer: aspi?.issuer || null,
-                                acquirer: aspi?.acquirer || null,
-
-                                merchant_name: aspi?.data?.merchant_name || null,
-                                merchant_id: aspi?.data?.merchant_id || null,
-                                merchant_city: aspi?.data?.merchant_city || null,
-
-                                terminal_label:
-                                    aspi?.data?.additional_data?.terminal_label || null
-                            };
-                        });
+                    const data = parseAndFilterQrisTransactions(result.hits, req.query);
 
                     return res.json({
                         success: true,
