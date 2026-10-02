@@ -57,7 +57,7 @@ class ApiKeyManager {
 
     if (loadedData) {
       this.keys = loadedData;
-      this.save();
+      this.save(false); // save without triggering duplicate github push on boot
     } else {
       const defaultKey = {
         key: 'BRANN-DEMO-' + crypto.randomBytes(4).toString('hex').toUpperCase(),
@@ -66,11 +66,14 @@ class ApiKeyManager {
         tokens: null
       };
       this.keys = [defaultKey];
-      this.save();
+      this.save(false);
     }
+
+    // Try sync initial load from GitHub if remote repo has newer keys
+    this.fetchFromGitHub();
   }
 
-  save() {
+  save(shouldSyncToGitHub = true) {
     if (!Array.isArray(this.keys)) return;
     const jsonStr = JSON.stringify(this.keys, null, 2);
 
@@ -82,8 +85,89 @@ class ApiKeyManager {
         }
         fs.writeFileSync(filePath, jsonStr, 'utf8');
       } catch (e) {
-        // Silently skip paths that cannot be written to
+        // Silently skip read-only paths
       }
+    }
+
+    if (shouldSyncToGitHub) {
+      this.syncToGitHub();
+    }
+  }
+
+  async fetchFromGitHub() {
+    const token = process.env.GITHUB_TOKEN || process.env.GH_TOKEN;
+    const repo = process.env.GITHUB_REPO || 'gibranadzhar/Brann-Merchant';
+    if (!token) return;
+
+    try {
+      const url = `https://api.github.com/repos/${repo}/contents/apikeys.json`;
+      const headers = {
+        'Authorization': `Bearer ${token}`,
+        'Accept': 'application/vnd.github.v3+json',
+        'User-Agent': 'Brann-Merchant-Server'
+      };
+      const res = typeof fetch !== 'undefined' ? await fetch(url, { headers }) : null;
+      if (res && res.ok) {
+        const data = await res.json();
+        const content = Buffer.from(data.content, 'base64').toString('utf8');
+        const parsed = JSON.parse(content);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          this.keys = parsed;
+          console.log(`✅ [ApiKeyManager] Synced ${parsed.length} database keys from GitHub (${repo})`);
+          this.save(false);
+        }
+      }
+    } catch (e) {
+      console.warn(`⚠️ [ApiKeyManager] Could not fetch remote keys from GitHub:`, e.message);
+    }
+  }
+
+  async syncToGitHub() {
+    const token = process.env.GITHUB_TOKEN || process.env.GH_TOKEN;
+    const repo = process.env.GITHUB_REPO || 'gibranadzhar/Brann-Merchant';
+    if (!token) return;
+
+    try {
+      const url = `https://api.github.com/repos/${repo}/contents/apikeys.json`;
+      const headers = {
+        'Authorization': `Bearer ${token}`,
+        'Accept': 'application/vnd.github.v3+json',
+        'User-Agent': 'Brann-Merchant-Server'
+      };
+
+      let sha = null;
+      if (typeof fetch !== 'undefined') {
+        try {
+          const getRes = await fetch(url, { headers });
+          if (getRes.ok) {
+            const getData = await getRes.json();
+            sha = getData.sha;
+          }
+        } catch (e) {}
+
+        const contentBase64 = Buffer.from(JSON.stringify(this.keys, null, 2)).toString('base64');
+        const putBody = {
+          message: 'auto(db): sync apikeys.json database update from server',
+          content: contentBase64,
+          branch: 'main'
+        };
+        if (sha) putBody.sha = sha;
+
+        const putRes = await fetch(url, {
+          method: 'PUT',
+          headers,
+          body: JSON.stringify(putBody)
+        });
+
+        if (putRes.ok) {
+          console.log(`✅ [ApiKeyManager] Auto-committed & pushed updated database to GitHub (${repo})!`);
+        } else {
+          const errText = await putRes.text();
+          console.error(`⚠️ [ApiKeyManager] GitHub API push failed (${putRes.status}):`, errText);
+        }
+      }
+    } catch (e) {
+      console.error(`⚠️ [ApiKeyManager] GitHub auto-sync failed:`, e.message);
     }
   }
 
@@ -115,7 +199,7 @@ class ApiKeyManager {
     };
 
     this.keys.push(newEntry);
-    this.save();
+    this.save(true);
     return newEntry;
   }
 
@@ -125,7 +209,7 @@ class ApiKeyManager {
     if (this.keys.length === initialLength) {
       throw new Error('API Key tidak ditemukan!');
     }
-    this.save();
+    this.save(true);
     return true;
   }
 
@@ -143,7 +227,7 @@ class ApiKeyManager {
       refreshToken,
       lastRefresh: new Date().toISOString()
     };
-    this.save();
+    this.save(true);
     return true;
   }
 
@@ -152,7 +236,7 @@ class ApiKeyManager {
     if (entry && entry.tokens) {
       entry.tokens.accessToken = newAccessToken;
       entry.tokens.lastRefresh = new Date().toISOString();
-      this.save();
+      this.save(true);
     }
   }
 
