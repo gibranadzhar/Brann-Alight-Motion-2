@@ -902,4 +902,159 @@ body.comic-theme th {
 html[data-theme="comic"] td,
 body.comic-theme td {
     border-bottom: 1.5px solid #222222 !important;
-}
+}
+
+/* ============================================================================
+   MOBILE & DESKTOP COMPATIBILITY OVERRIDES
+   Ensures theme styling (Light, Dark, Comic) applies perfectly across all
+   screen sizes including mobile topbars, bottom navs, sidebars, and menus.
+   ============================================================================ */
+
+/* 1. COMIC THEME MOBILE & DESKTOP OVERRIDES */
+html[data-theme="comic"] .mobile-top-bar,
+html[data-theme="comic"] .top-bar,
+html[data-theme="comic"] .app-top-bar,
+html[data-theme="comic"] .topbar,
+body.comic-theme .mobile-top-bar,
+body.comic-theme .top-bar,
+body.comic-theme .app-top-bar,
+body.comic-theme .topbar {
+    background: #fffdf5 !important;
+    border-bottom: 3.5px solid #222222 !important;
+    box-shadow: 0 4px 0px #222222 !important;
+}
+
+html[data-theme="comic"] .mobile-bottom-nav,
+body.comic-theme .mobile-bottom-nav {
+    background: #fffdf5 !important;
+    border-top: 3.5px solid #222222 !important;
+    box-shadow: 0 -4px 0px #222222 !important;
+}
+
+html[data-theme="comic"] .mobile-bottom-nav a,
+body.comic-theme .mobile-bottom-nav a {
+    color: #222222 !important;
+}
+
+html[data-theme="comic"] .mobile-bottom-nav a.active,
+body.comic-theme .mobile-bottom-nav a.active {
+    color: #ff3366 !important;
+    font-family: 'Bangers', cursive !important;
+}
+
+html[data-theme="comic"] .theme-menu,
+html[data-theme="comic"] .user-profile-menu,
+body.comic-theme .theme-menu,
+body.comic-theme .user-profile-menu {
+    background: #fffdf5 !important;
+    border: 3px solid #222222 !important;
+    box-shadow: 4px 4px 0px #222222 !important;
+    border-radius: 12px !important;
+}
+
+html[data-theme="comic"] .theme-option:hover,
+html[data-theme="comic"] .theme-option.active,
+body.comic-theme .theme-option:hover,
+body.comic-theme .theme-option.active {
+    background: #ffcc00 !important;
+    color: #222222 !important;
+    font-weight: bold !important;
+}
+
+/* 2. LIGHT THEME MOBILE & DESKTOP OVERRIDES */
+html[data-theme="light"] body,
+body.light-theme {
+    background-color: #faf8f5 !important;
+    color: #1a1a2e !important;
+}
+
+html[data-theme="light"] .mobile-top-bar,
+html[data-theme="light"] .top-bar,
+html[data-theme="light"] .app-top-bar,
+html[data-theme="light"] .topbar,
+body.light-theme .mobile-top-bar,
+body.light-theme .top-bar,
+body.light-theme .app-top-bar,
+body.light-theme .topbar {
+    background: rgba(255, 255, 255, 0.95) !important;
+    border-bottom: 1px solid rgba(30, 30, 50, 0.1) !important;
+    backdrop-filter: blur(10px) !important;
+}
+
+html[data-theme="light"] .app-sidebar,
+body.light-theme .app-sidebar {
+    background: #ffffff !important;
+    border-right: 1px solid rgba(30, 30, 50, 0.1) !important;
+}
+
+html[data-theme="light"] .sidebar-link,
+body.light-theme .sidebar-link {
+    color: #4b5563 !important;
+}
+
+html[data-theme="light"] .sidebar-link:hover,
+body.light-theme .sidebar-link:hover {
+    background: rgba(79, 70, 229, 0.08) !important;
+    color: #4f46e5 !important;
+}
+
+html[data-theme="light"] .theme-menu,
+html[data-theme="light"] .user-profile-menu,
+body.light-theme .theme-menu,
+body.light-theme .user-profile-menu {
+    background: #ffffff !important;
+    border: 1px solid rgba(30, 30, 50, 0.12) !important;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1) !important;
+}
+
+html[data-theme="light"] .theme-option:hover,
+html[data-theme="light"] .theme-option.active,
+body.light-theme .theme-option:hover,
+body.light-theme .theme-option.active {
+    background: rgba(79, 70, 229, 0.1) !important;
+    color: #4f46e5 !important;
+}
+
+/* 3. DARK THEME MOBILE & DESKTOP OVERRIDES */
+html[data-theme="dark"] body,
+body.dark-theme {
+    background-color: #09090b !important;
+    color: #f4f4f5 !important;
+}
+
+html[data-theme="dark"] .mobile-top-bar,
+html[data-theme="dark"] .top-bar,
+html[data-theme="dark"] .app-top-bar,
+html[data-theme="dark"] .topbar,
+body.dark-theme .mobile-top-bar,
+body.dark-theme .top-bar,
+body.dark-theme .app-top-bar,
+body.dark-theme .topbar {
+    background: rgba(9, 9, 11, 0.9) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+    backdrop-filter: blur(12px) !important;
+}
+
+html[data-theme="dark"] .app-sidebar,
+body.dark-theme .app-sidebar {
+    background: rgba(15, 15, 20, 0.95) !important;
+    border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+html[data-theme="dark"] .theme-menu,
+html[data-theme="dark"] .user-profile-menu,
+body.dark-theme .theme-menu,
+body.dark-theme .user-profile-menu {
+    background: #141419 !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5) !important;
+}
+
+html[data-theme="dark"] .theme-option:hover,
+html[data-theme="dark"] .theme-option.active,
+body.dark-theme .theme-option:hover,
+body.dark-theme .theme-option.active {
+    background: rgba(6, 182, 212, 0.15) !important;
+    color: #06b6d4 !important;
+}
+
