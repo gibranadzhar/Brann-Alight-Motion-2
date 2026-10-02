@@ -17,8 +17,8 @@ Thumbs.db
 
 # ============ STATE RUNTIME — SENSITIF ============
 # Berisi data user, hash password, sesi login, riwayat, dll.
-# ⚠️ JANGAN di-upload ke git. Aktifkan dengan menghapus tanda #:
-# data/
+data/*
+!data/.gitkeep
 
 # Local merchant / session secrets
 gopay/token.txt
