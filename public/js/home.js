@@ -257,7 +257,7 @@
         if (VALID_SCREENS.indexOf(name) === -1) name = 'dashboard';
         if ((name === 'admin' || name === 'settings') && !isAdminOrOwner()) name = 'dashboard';
         if (name === 'lifetime' && !isVipTier()) name = 'dashboard';
-        if (name === 'apiguide' && (!currentUser || !hasApiRole(currentUser.role)) && !(currentUser && currentUser.role === 'user' && APP_MAINT && !APP_MAINT.apikeyUserDisabled)) name = 'dashboard';
+        if (name === 'apiguide' && !currentUser) name = 'dashboard';
         $('main-content').classList.toggle('profile-screen-active', name === 'profile');
         if (name !== 'chat') closeChatStream();
 
