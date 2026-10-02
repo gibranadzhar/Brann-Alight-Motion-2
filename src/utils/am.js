@@ -48,7 +48,7 @@ async function sendLink(user, email) {
         return { success: false, message: 'Gagal mengirim magic link: ' + (result.error || result.message || 'Unknown error') };
     }
 
-    const orderId = generateOrderId();
+    const orderId = generateOrderId(user);
     const history = readJSON('history', []);
     history.push({
         id: newId(),
@@ -82,7 +82,7 @@ async function claimPremium(user, email, rawLink) {
     }
 
     const history = readJSON('history', []);
-    const orderId = premiumResult.orderId || generateOrderId();
+    const orderId = premiumResult.orderId || generateOrderId(user);
     history.push({
         id: newId(),
         username: user.username,
@@ -90,7 +90,7 @@ async function claimPremium(user, email, rawLink) {
         orderId: orderId,
         status: 'success',
         note: 'Premium diaktifkan',
-        codeorder: premiumResult.codeorder,
+        codeorder: premiumResult.codeorder || orderId,
         createdAt: fmtDateTime(),
     });
     writeJSON('history', history);
