@@ -565,13 +565,13 @@ app.get('/api/qris/status', async (req, res) => {
 // nabrak bila kedua app berjalan di environment/deployment yang sama.
 // Bind 127.0.0.1 + port internal (13016): publik dilayani nginx di port 3016
 // (listen 0.0.0.0:3016 TIDAK bisa bareng bind 127.0.0.1:3016 → EADDRINUSE).
-const PORT = process.env.GOPAY_PORT || 13016;
+const PORT = process.env.PORT || process.env.GOPAY_PORT || 13016;
+const HOST = process.env.HOST || '0.0.0.0';
 
 // Di Vercel, app di-import sebagai serverless function (jangan listen).
-// Di lokal/Termux, tetap jalan normal dengan app.listen.
+// Di Railway / lokal / Termux, jalan dengan app.listen.
 if (process.env.VERCEL !== '1') {
-    // Bind localhost saja — publik dilayani nginx (site gopay, port 3016)
-    app.listen(PORT, 'localhost', () => console.log(`✅ Server running on http://localhost:${PORT}`));
+    app.listen(PORT, HOST, () => console.log(`✅ Server running on http://${HOST}:${PORT}`));
 }
 
 module.exports = app;
