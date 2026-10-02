@@ -417,6 +417,36 @@
             transform: translate(-2px, -2px);
             box-shadow: 6px 6px 0 0 var(--shadow-color);
         }
+
+        .btn-owner-portal {
+            background: #18181b;
+            color: #FFFFFF;
+            font-weight: 800;
+            padding: 16px 24px;
+            border: 3px solid var(--ink);
+            border-radius: 4px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.15s ease;
+            box-shadow: 4px 4px 0 0 var(--shadow-color);
+        }
+
+        .btn-owner-portal:hover {
+            background: #27272a;
+            transform: translate(-2px, -2px);
+            box-shadow: 6px 6px 0 0 var(--shadow-color);
+        }
+
+        .badge-magenta {
+            background: var(--accent-magenta);
+            color: #FFFFFF;
+        }
+
+        .modal-large {
+            max-width: 720px !important;
+        }
     </style>
 </head>    
 <body class="antialiased">    
@@ -446,17 +476,23 @@
     <main class="max-w-6xl mx-auto p-4 sm:p-6 md:p-10 pb-32">    
         <div class="space-y-6 sm:space-y-8">    
         
-            <!-- Token Setup Button -->
+            <!-- Top Banner / Buttons -->
             <div class="premium-card p-6 sm:p-8">
                 <div class="flex items-center justify-between gap-4 flex-wrap">
                     <div>
-                        <h2 class="text-2xl font-black mb-2">⚡ Auto Token Manager</h2>
-                        <p class="text-gray-600 text-sm">Setup token sekali, auto-refresh setiap 15 menit. API auto-managed tanpa perlu pass token di setiap request!</p>
+                        <h2 class="text-2xl font-black mb-2">🔑 GoMerch API Key Gateway</h2>
+                        <p class="text-gray-600 text-sm">Gunakan API Key untuk mengakses auto history mutasi QRIS. Owner dapat mengelola API Key & token.</p>
                     </div>
-                    <button class="btn-token-setup" onclick="openPasswordModal()">
-                        <i data-lucide="key" class="w-5 h-5"></i>
-                        Setup Tokens
-                    </button>
+                    <div class="flex items-center gap-3 flex-wrap">
+                        <button class="btn-token-setup" onclick="openApiKeyModal()">
+                            <i data-lucide="key" class="w-5 h-5"></i>
+                            Login API Key
+                        </button>
+                        <button class="btn-owner-portal" onclick="openPasswordModal()">
+                            <i data-lucide="shield-check" class="w-5 h-5"></i>
+                            Owner Portal
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -566,6 +602,45 @@
                 </div>    
             </div>    
     
+            <!-- Auto History API with API Key Card -->
+            <div class="premium-card p-6 sm:p-8" data-endpoint="api-history-auto">
+                <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
+                    <div class="flex items-center gap-4 flex-wrap">
+                        <span class="endpoint-badge badge-magenta">
+                            <i data-lucide="arrow-right-circle" class="w-4 h-4"></i> GET
+                        </span>
+                        <code class="text-lg font-bold text-black tracking-tight">/api/history/auto/:apikey</code>
+                    </div>
+                    <button onclick="copyEndpointWithParams('api-history-auto', '/api/history/auto/' + (getVal('param-api-history-auto-apikey') || ':apikey'), ['start_time'])" class="btn-copy" id="copy-btn-api-history-auto">
+                        <i data-lucide="copy" class="w-4 h-4"></i>
+                    </button>
+                </div>
+                <div class="flex flex-col lg:flex-row gap-6 items-stretch">
+                    <div class="w-full lg:w-1/2 space-y-4 flex flex-col">
+                        <div class="glass-input flex items-center px-5">
+                            <span class="param-label min-w-[70px] text-pink-700">apikey=</span>
+                            <input type="text" id="param-api-history-auto-apikey" placeholder="BRANN-XXXXX" class="w-full bg-transparent outline-none py-5 text-lg">
+                        </div>
+                        <div class="glass-input flex items-center px-5">
+                            <span class="param-label min-w-[98px]">start_time=</span>
+                            <input type="text" id="param-api-history-auto-start_time" placeholder="YYYY-MM-DD (opsional)" class="w-full bg-transparent outline-none py-5 text-lg">
+                        </div>
+                        <button onclick="runApiTest('/api/history/auto/' + (getVal('param-api-history-auto-apikey') || 'check'), {start_time: getVal('param-api-history-auto-start_time')}, 'res-hist-auto')" class="btn-primary mt-auto py-5">
+                            <i data-lucide="play" class="w-5 h-5"></i> <span>Jalankan Auto History</span>
+                        </button>
+                    </div>
+                    <div class="w-full lg:w-1/2 min-h-[220px]">
+                        <div class="api-terminal relative h-full min-h-[220px] rounded-2xl">
+                            <div class="dots"><span></span><span></span><span></span></div>
+                            <button class="copy-result-btn" onclick="copyResult('res-hist-auto')">
+                                <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+                            </button>
+                            <pre id="res-hist-auto" class="p-5 sm:p-6 h-full overflow-auto custom-scrollbar" style="padding-top: 42px;">// Response Auto History JSON</pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <div class="premium-card p-6 sm:p-8" data-endpoint="api-history">    
                 <div class="flex flex-wrap items-center justify-between gap-4 mb-6">    
                     <div class="flex items-center gap-4 flex-wrap">    
@@ -699,23 +774,143 @@
         </div>    
     </div>    
 
-    <!-- Password Modal -->
-    <div id="passwordModal" class="modal">
-        <div class="modal-content">
+    </div>    
+
+    <!-- Login API Key & Guide Modal -->
+    <div id="apiKeyModal" class="modal">
+        <div class="modal-content modal-large max-h-[90vh] overflow-y-auto">
             <div class="modal-header">
-                <h2>🔐 Verify Password</h2>
+                <h2>🔑 Login API Key & Panduan Integrasi API</h2>
+                <button class="modal-close" onclick="closeApiKeyModal()">×</button>
+            </div>
+            
+            <div class="space-y-6">
+                <!-- Login Form -->
+                <form id="apiKeyForm" class="space-y-4" onsubmit="handleApiKeyLogin(event)">
+                    <div>
+                        <label class="block text-sm font-bold mb-2">Masukan API Key Anda</label>
+                        <div class="flex gap-2">
+                            <input type="text" id="apiKeyInput" placeholder="Contoh: BRANN-XXXXXXXX" class="w-full px-4 py-3 border-2 border-black rounded-sm focus:outline-none focus:border-blue-500 font-mono" required>
+                            <button type="submit" class="btn-primary whitespace-nowrap">
+                                <i data-lucide="check-circle" class="w-5 h-5"></i>
+                                Verifikasi
+                            </button>
+                        </div>
+                    </div>
+                </form>
+
+                <!-- Saved Key Status -->
+                <div id="activeKeyBanner" class="hidden p-4 bg-emerald-50 border-2 border-emerald-500 rounded-sm flex items-center justify-between">
+                    <div>
+                        <span class="text-xs font-bold uppercase text-emerald-700 block">Status Login API Key:</span>
+                        <code id="activeKeyText" class="font-bold text-black text-sm"></code>
+                    </div>
+                    <button onclick="logoutApiKey()" class="text-xs font-bold text-red-600 underline">Logout Key</button>
+                </div>
+
+                <!-- API Integration Guide -->
+                <div class="border-2 border-black rounded-sm p-4 bg-slate-50 space-y-4">
+                    <h3 class="font-black text-lg flex items-center gap-2">
+                        <i data-lucide="book-open" class="w-5 h-5 text-blue-600"></i>
+                        Panduan Integrasi API (/api/history/auto)
+                    </h3>
+                    <p class="text-xs text-gray-700 leading-relaxed">
+                        API Key ini digunakan agar sistem Anda / website pihak ketiga dapat mengecek riwayat mutasi QRIS secara otomatis tanpa perlu re-login token merchant.
+                    </p>
+
+                    <div class="space-y-3 text-xs">
+                        <div>
+                            <span class="font-bold text-slate-800 block mb-1">1. Format URL Direct (Recommended):</span>
+                            <code class="block p-3 bg-black text-green-400 rounded-sm font-mono overflow-x-auto select-all">
+                                GET https://brann-merchant-production.up.railway.app/api/history/auto/<span id="guideKeyParam1">BRANN-XXXXX</span>
+                            </code>
+                        </div>
+
+                        <div>
+                            <span class="font-bold text-slate-800 block mb-1">2. Format Query Parameter:</span>
+                            <code class="block p-3 bg-black text-green-400 rounded-sm font-mono overflow-x-auto select-all">
+                                GET https://brann-merchant-production.up.railway.app/api/history/auto?apikey=<span id="guideKeyParam2">BRANN-XXXXX</span>
+                            </code>
+                        </div>
+
+                        <div>
+                            <span class="font-bold text-slate-800 block mb-1">3. Contoh JavaScript (Fetch):</span>
+                            <pre class="p-3 bg-slate-900 text-slate-200 rounded-sm font-mono overflow-x-auto">
+const res = await fetch('https://brann-merchant-production.up.railway.app/api/history/auto/<span id="guideKeyParam3">BRANN-XXXXX</span>');
+const result = await res.json();
+console.log(result);</pre>
+                        </div>
+
+                        <div>
+                            <span class="font-bold text-slate-800 block mb-1">4. Contoh cURL CLI:</span>
+                            <pre class="p-3 bg-slate-900 text-slate-200 rounded-sm font-mono overflow-x-auto">
+curl -X GET "https://brann-merchant-production.up.railway.app/api/history/auto/<span id="guideKeyParam4">BRANN-XXXXX</span>"</pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Password / Owner Modal -->
+    <div id="passwordModal" class="modal">
+        <div class="modal-content modal-large max-h-[90vh] overflow-y-auto">
+            <div class="modal-header">
+                <h2 id="ownerModalTitle">🔐 Owner Verification</h2>
                 <button class="modal-close" onclick="closePasswordModal()">×</button>
             </div>
+
+            <!-- Password Form (Step 1) -->
             <form id="passwordForm" class="space-y-4" onsubmit="verifyPassword(event)">
                 <div>
-                    <label class="block text-sm font-bold mb-2">Masukan Password</label>
-                    <input type="password" id="passwordInput" placeholder="Enter password" class="w-full px-4 py-3 border-2 border-black rounded-sm focus:outline-none focus:border-blue-500" required>
+                    <label class="block text-sm font-bold mb-2">Masukan Password Owner/Admin</label>
+                    <input type="password" id="passwordInput" placeholder="Enter owner password" class="w-full px-4 py-3 border-2 border-black rounded-sm focus:outline-none focus:border-blue-500" required>
                 </div>
                 <button type="submit" class="btn-primary w-full">
                     <i data-lucide="lock" class="w-5 h-5"></i>
-                    Verify & Setup Tokens
+                    Verify & Access Owner Panel
                 </button>
             </form>
+
+            <!-- Owner Panel (Step 2 - Hidden until password verified) -->
+            <div id="ownerPanelContainer" class="hidden space-y-6">
+                <!-- Action bar: Token Setup link -->
+                <div class="flex items-center justify-between p-4 bg-yellow-50 border-2 border-yellow-400 rounded-sm">
+                    <div>
+                        <h4 class="font-black text-sm">⚡ Setup Tokens GoMerchant</h4>
+                        <p class="text-xs text-gray-600">Atur access_token & refresh_token GoPay utama.</p>
+                    </div>
+                    <a href="/auth/token-setup" class="btn-primary text-xs py-2 px-4 whitespace-nowrap">
+                        Setup GoPay Tokens &rarr;
+                    </a>
+                </div>
+
+                <!-- API Key Management Header -->
+                <div class="border-t-2 border-black pt-4">
+                    <h3 class="font-black text-lg mb-2">🔑 Owner API Key Management</h3>
+                    <p class="text-xs text-gray-600 mb-4">Tambah, hapus, dan kelola daftar API Key aktif untuk pengguna.</p>
+
+                    <!-- Add New API Key Form -->
+                    <form onsubmit="handleOwnerAddApiKey(event)" class="space-y-3 p-4 border-2 border-black rounded-sm bg-slate-50 mb-6">
+                        <span class="font-bold text-sm block">➕ Tambah API Key Baru (addapikey)</span>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <input type="text" id="newKeyLabel" placeholder="Label / Nama Pemilik Key (Contoh: Web Store A)" class="px-3 py-2 border-2 border-black rounded-sm text-sm" required>
+                            <input type="text" id="newCustomKey" placeholder="Custom Key (Opsional - Kosongkan untuk auto-generate)" class="px-3 py-2 border-2 border-black rounded-sm text-sm font-mono">
+                        </div>
+                        <button type="submit" class="btn-primary text-sm py-2 w-full sm:w-auto">
+                            <i data-lucide="plus-circle" class="w-4 h-4"></i> Buat API Key
+                        </button>
+                    </form>
+
+                    <!-- API Key List -->
+                    <div class="space-y-2">
+                        <span class="font-bold text-sm block">📋 Daftar API Key Aktif (list apikey)</span>
+                        <div id="ownerKeyList" class="space-y-2 max-h-60 overflow-y-auto pr-1">
+                            <div class="text-xs text-gray-500 italic">Memuat daftar API Key...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
     
@@ -724,7 +919,74 @@
     
         const BASE_URL = window.location.origin;
 
-        // Password Modal Functions
+        // API Key Modal Functions
+        function openApiKeyModal() {
+            document.getElementById('apiKeyModal').classList.add('show');
+            const saved = localStorage.getItem('merchantApiKey');
+            if (saved) {
+                document.getElementById('apiKeyInput').value = saved;
+                updateActiveKeyUI(saved);
+            }
+        }
+
+        function closeApiKeyModal() {
+            document.getElementById('apiKeyModal').classList.remove('show');
+        }
+
+        function updateActiveKeyUI(key) {
+            const banner = document.getElementById('activeKeyBanner');
+            const text = document.getElementById('activeKeyText');
+            if (key) {
+                banner.classList.remove('hidden');
+                text.textContent = key;
+                ['guideKeyParam1', 'guideKeyParam2', 'guideKeyParam3', 'guideKeyParam4'].forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) el.textContent = key;
+                });
+                const paramInput = document.getElementById('param-api-history-auto-apikey');
+                if (paramInput) paramInput.value = key;
+            } else {
+                banner.classList.add('hidden');
+                text.textContent = '';
+                ['guideKeyParam1', 'guideKeyParam2', 'guideKeyParam3', 'guideKeyParam4'].forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) el.textContent = 'BRANN-XXXXX';
+                });
+            }
+        }
+
+        async function handleApiKeyLogin(e) {
+            e.preventDefault();
+            const apikey = getVal('apiKeyInput');
+            if (!apikey) return;
+
+            try {
+                const response = await fetch('/api/auth/login-apikey', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ apikey })
+                });
+                const data = await response.json();
+                if (data.success) {
+                    localStorage.setItem('merchantApiKey', apikey);
+                    updateActiveKeyUI(apikey);
+                    showToast('✅ API Key valid & tersimpan!', '✅');
+                } else {
+                    showToast('❌ ' + data.error, '❌');
+                }
+            } catch (err) {
+                showToast('❌ Gagal verifikasi key: ' + err.message, '❌');
+            }
+        }
+
+        function logoutApiKey() {
+            localStorage.removeItem('merchantApiKey');
+            document.getElementById('apiKeyInput').value = '';
+            updateActiveKeyUI(null);
+            showToast('Logged out dari API Key', 'ℹ️');
+        }
+
+        // Owner Modal & API Key Management Functions
         function openPasswordModal() {
             document.getElementById('passwordModal').classList.add('show');
             document.getElementById('passwordInput').focus();
@@ -742,20 +1004,17 @@
             try {
                 const response = await fetch('/api/auth/verify-password', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ password })
                 });
-
                 const data = await response.json();
 
                 if (data.success) {
-                    showToast('✅ Password verified! Redirecting to token setup...', '✅');
-                    closePasswordModal();
-                    setTimeout(() => {
-                        window.location.href = '/auth/token-setup';
-                    }, 1000);
+                    showToast('✅ Password verified! Membuka Owner Panel...', '✅');
+                    document.getElementById('passwordForm').classList.add('hidden');
+                    document.getElementById('ownerPanelContainer').classList.remove('hidden');
+                    document.getElementById('ownerModalTitle').textContent = '🛡️ Owner Management Portal';
+                    fetchOwnerApiKeys();
                 } else {
                     showToast('❌ ' + data.error, '❌');
                 }
@@ -764,11 +1023,109 @@
             }
         }
 
-        // Close modal when clicking outside
-        document.getElementById('passwordModal')?.addEventListener('click', (e) => {
-            if (e.target.id === 'passwordModal') {
-                closePasswordModal();
+        async function fetchOwnerApiKeys() {
+            const listEl = document.getElementById('ownerKeyList');
+            try {
+                const res = await fetch('/api/auth/apikeys');
+                const data = await res.json();
+                if (data.success) {
+                    renderOwnerApiKeys(data.keys);
+                } else {
+                    listEl.innerHTML = `<div class="text-xs text-red-500 font-bold">Gagal memuat API Keys: ${data.error}</div>`;
+                }
+            } catch (e) {
+                listEl.innerHTML = `<div class="text-xs text-red-500 font-bold">Error: ${e.message}</div>`;
             }
+        }
+
+        function renderOwnerApiKeys(keys) {
+            const listEl = document.getElementById('ownerKeyList');
+            if (!keys || keys.length === 0) {
+                listEl.innerHTML = `<div class="text-xs text-gray-500 italic p-3 border-2 border-dashed border-gray-300 rounded-sm">Belum ada API Key aktif. Silahkan buat di atas!</div>`;
+                return;
+            }
+
+            listEl.innerHTML = keys.map(k => `
+                <div class="p-3 bg-white border-2 border-black rounded-sm flex items-center justify-between gap-3 flex-wrap text-xs">
+                    <div>
+                        <div class="font-bold text-sm text-black flex items-center gap-2">
+                            <span>${k.label || 'API Key'}</span>
+                            <span class="text-[10px] bg-slate-200 px-2 py-0.5 rounded font-mono">${k.createdAt ? new Date(k.createdAt).toLocaleDateString('id-ID') : ''}</span>
+                        </div>
+                        <code class="font-mono text-blue-700 font-bold select-all">${k.key}</code>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button onclick="copyToClipboard('${k.key}')" class="px-2 py-1 bg-slate-100 border border-black rounded font-bold hover:bg-slate-200">
+                            📋 Copy
+                        </button>
+                        <button onclick="handleOwnerDeleteApiKey('${k.key}')" class="px-2 py-1 bg-red-500 text-white border border-black rounded font-bold hover:bg-red-600">
+                            🗑️ Del
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function handleOwnerAddApiKey(e) {
+            e.preventDefault();
+            const label = getVal('newKeyLabel');
+            const customKey = getVal('newCustomKey');
+
+            try {
+                const response = await fetch('/api/auth/apikeys/add', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ label, customKey })
+                });
+                const data = await response.json();
+                if (data.success) {
+                    showToast('✅ API Key berhasil dibuat!', '✅');
+                    document.getElementById('newKeyLabel').value = '';
+                    document.getElementById('newCustomKey').value = '';
+                    fetchOwnerApiKeys();
+                } else {
+                    showToast('❌ ' + data.error, '❌');
+                }
+            } catch (err) {
+                showToast('❌ Error: ' + err.message, '❌');
+            }
+        }
+
+        async function handleOwnerDeleteApiKey(key) {
+            if (!confirm(`Yakin ingin menghapus API Key:\n${key}?`)) return;
+
+            try {
+                const response = await fetch('/api/auth/apikeys/delete', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ key })
+                });
+                const data = await response.json();
+                if (data.success) {
+                    showToast('✅ API Key berhasil dihapus!', '🗑️');
+                    fetchOwnerApiKeys();
+                } else {
+                    showToast('❌ ' + data.error, '❌');
+                }
+            } catch (err) {
+                showToast('❌ Error: ' + err.message, '❌');
+            }
+        }
+
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                showToast('API Key disalin!', '📋');
+            });
+        }
+
+        // Close modal when clicking outside
+        ['passwordModal', 'apiKeyModal'].forEach(id => {
+            document.getElementById(id)?.addEventListener('click', (e) => {
+                if (e.target.id === id) {
+                    if (id === 'passwordModal') closePasswordModal();
+                    if (id === 'apiKeyModal') closeApiKeyModal();
+                }
+            });
         });    
     
         function getVal(id) {    
@@ -879,7 +1236,11 @@
         }    
     
         document.addEventListener('DOMContentLoaded', () => {    
-            lucide.createIcons();    
+            lucide.createIcons();
+            const savedKey = localStorage.getItem('merchantApiKey');
+            if (savedKey) {
+                updateActiveKeyUI(savedKey);
+            }
         });    
         const observer = new MutationObserver(() => { lucide.createIcons(); });    
         observer.observe(document.getElementById('toast'), { childList: true, subtree: true });    

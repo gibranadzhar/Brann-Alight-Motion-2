@@ -6,6 +6,7 @@ const fetch = (...args) => import("node-fetch").then(({ default: fetch }) => fet
 const FormData = require("form-data");
 const session = require('express-session');
 const tokenManager = require('./tokenManager');
+const apiKeyManager = require('./apiKeyManager');
 
 const app = express();
 const sdk = new GoMerchant();
@@ -154,6 +155,61 @@ app.get('/api/auth/token-status', (req, res) => {
     });
 });
 
+// ================= API KEY MANAGEMENT =================
+// Public API key verification / login
+app.post('/api/auth/login-apikey', (req, res) => {
+    try {
+        const { apikey } = req.body;
+        if (!apikey) {
+            return res.status(400).json({ success: false, error: 'API Key wajib diisi!' });
+        }
+        const isValid = apiKeyManager.isValid(apikey);
+        if (!isValid) {
+            return res.status(401).json({ success: false, error: 'API Key tidak valid atau telah dihapus!' });
+        }
+        res.json({ success: true, message: 'API Key valid!', apikey });
+    } catch (e) {
+        res.status(400).json({ success: false, error: e.message });
+    }
+});
+
+// List all API keys (Owner only)
+app.get('/api/auth/apikeys', (req, res) => {
+    if (!req.session.passwordVerified) {
+        return res.status(403).json({ success: false, error: 'Verify password dulu untuk akses Owner Portal!' });
+    }
+    res.json({ success: true, keys: apiKeyManager.getAll() });
+});
+
+// Add new API key (Owner only)
+app.post('/api/auth/apikeys/add', (req, res) => {
+    if (!req.session.passwordVerified) {
+        return res.status(403).json({ success: false, error: 'Verify password dulu!' });
+    }
+    try {
+        const { label, customKey } = req.body;
+        const newKey = apiKeyManager.addKey(label, customKey);
+        res.json({ success: true, message: 'API Key berhasil ditambahkan!', key: newKey });
+    } catch (e) {
+        res.status(400).json({ success: false, error: e.message });
+    }
+});
+
+// Delete API key (Owner only)
+app.post('/api/auth/apikeys/delete', (req, res) => {
+    if (!req.session.passwordVerified) {
+        return res.status(403).json({ success: false, error: 'Verify password dulu!' });
+    }
+    try {
+        const { key } = req.body;
+        if (!key) return res.status(400).json({ success: false, error: 'Key wajib diisi!' });
+        apiKeyManager.deleteKey(key);
+        res.json({ success: true, message: 'API Key berhasil dihapus!' });
+    } catch (e) {
+        res.status(400).json({ success: false, error: e.message });
+    }
+});
+
 // Kirim OTP
 app.get('/auth/otp', async (req, res) => {
     try {
@@ -283,14 +339,25 @@ app.get('/api/history', async (req, res) => {
     }
 });
 
-// ⭐ AUTO-MANAGED HISTORY API - Token tersimpan, auto-refresh setiap 15 menit
-app.get('/api/history/auto', async (req, res) => {
+// ⭐ AUTO-MANAGED HISTORY API - Supports /api/history/auto/:apikey? (or ?apikey=... or x-api-key header)
+const handleAutoHistory = async (req, res) => {
     try {
-        // Cek apakah tokens sudah tersimpan
+        // Cek apakah tokens sudah tersimpan di server oleh Owner
         if (!tokenManager.hasTokens()) {
             return res.status(401).json({
                 success: false,
-                error: 'Tokens belum tersimpan! Silahkan setup di /auth/token-setup dulu'
+                error: 'Tokens GoMerchant belum di-setup oleh Owner! Silahkan hubungi Owner.'
+            });
+        }
+
+        // Check API Key via URL param, query param, or header
+        const reqApiKey = req.params.apikey || req.query.apikey || req.headers['x-api-key'];
+        const isOwnerSession = !!req.session.passwordVerified;
+
+        if (!isOwnerSession && (!reqApiKey || !apiKeyManager.isValid(reqApiKey))) {
+            return res.status(401).json({
+                success: false,
+                error: 'API Key tidak valid atau belum diisi! Gunakan URL format /api/history/auto/:apikey atau parameter ?apikey=...'
             });
         }
 
@@ -425,7 +492,10 @@ app.get('/api/history/auto', async (req, res) => {
             error: e.response?.data || e.message
         });
     }
-});
+};
+
+app.get('/api/history/auto', handleAutoHistory);
+app.get('/api/history/auto/:apikey', handleAutoHistory);
 
 // Daftar payout
 app.get('/api/payouts', async (req, res) => {
