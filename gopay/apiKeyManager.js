@@ -4,37 +4,86 @@ const crypto = require('crypto');
 
 class ApiKeyManager {
   constructor() {
-    this.filePath = path.join(__dirname, 'apikeys.json');
+    this.candidatePaths = this.resolvePaths();
     this.keys = [];
     this.init();
   }
 
+  resolvePaths() {
+    const paths = [];
+
+    // 1. Env STORAGE_PATH or DATA_PATH if set
+    if (process.env.STORAGE_PATH) {
+      paths.push(process.env.STORAGE_PATH.endsWith('.json') 
+        ? process.env.STORAGE_PATH 
+        : path.join(process.env.STORAGE_PATH, 'apikeys.json'));
+    }
+    if (process.env.DATA_PATH) {
+      paths.push(process.env.DATA_PATH.endsWith('.json') 
+        ? process.env.DATA_PATH 
+        : path.join(process.env.DATA_PATH, 'apikeys.json'));
+    }
+
+    // 2. Railway volume default paths (/data)
+    paths.push('/data/apikeys.json');
+    paths.push('/app/data/apikeys.json');
+
+    // 3. Local directory candidate paths
+    paths.push(path.join(__dirname, 'data', 'apikeys.json'));
+    paths.push(path.join(__dirname, 'apikeys.json'));
+
+    return [...new Set(paths)];
+  }
+
   init() {
-    try {
-      if (fs.existsSync(this.filePath)) {
-        const raw = fs.readFileSync(this.filePath, 'utf8');
-        this.keys = JSON.parse(raw);
-      } else {
-        const defaultKey = {
-          key: 'BRANN-DEMO-' + crypto.randomBytes(4).toString('hex').toUpperCase(),
-          label: 'Demo User',
-          createdAt: new Date().toISOString(),
-          tokens: null
-        };
-        this.keys = [defaultKey];
-        this.save();
+    let loadedData = null;
+
+    // Search through candidate paths for existing valid data
+    for (const filePath of this.candidatePaths) {
+      try {
+        if (fs.existsSync(filePath)) {
+          const raw = fs.readFileSync(filePath, 'utf8');
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            loadedData = parsed;
+            console.log(`✅ [ApiKeyManager] Loaded ${parsed.length} keys from ${filePath}`);
+            break;
+          }
+        }
+      } catch (e) {
+        // Skip unreadable paths
       }
-    } catch (e) {
-      console.error('⚠️ [ApiKeyManager] Failed to read apikeys.json:', e.message);
-      this.keys = [];
+    }
+
+    if (loadedData) {
+      this.keys = loadedData;
+      this.save();
+    } else {
+      const defaultKey = {
+        key: 'BRANN-DEMO-' + crypto.randomBytes(4).toString('hex').toUpperCase(),
+        label: 'Demo User',
+        createdAt: new Date().toISOString(),
+        tokens: null
+      };
+      this.keys = [defaultKey];
+      this.save();
     }
   }
 
   save() {
-    try {
-      fs.writeFileSync(this.filePath, JSON.stringify(this.keys, null, 2), 'utf8');
-    } catch (e) {
-      console.error('❌ [ApiKeyManager] Failed to save apikeys.json:', e.message);
+    if (!Array.isArray(this.keys)) return;
+    const jsonStr = JSON.stringify(this.keys, null, 2);
+
+    for (const filePath of this.candidatePaths) {
+      try {
+        const dir = path.dirname(filePath);
+        if (!fs.existsSync(dir)) {
+          fs.mkdirSync(dir, { recursive: true });
+        }
+        fs.writeFileSync(filePath, jsonStr, 'utf8');
+      } catch (e) {
+        // Silently skip paths that cannot be written to
+      }
     }
   }
 
