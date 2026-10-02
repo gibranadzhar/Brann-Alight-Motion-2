@@ -709,3 +709,197 @@ body.light-theme .gradient-heading {
     -webkit-text-fill-color: transparent;
     color: transparent !important;
 }
+
+/* ============================================================================
+   COMIC OVERLAY — POP! THEME ENHANCEMENTS
+   Thick outlines, halftone patterns, hard shadows, comic typography & animations.
+   ============================================================================ */
+
+html[data-theme="comic"] body,
+body.comic-theme {
+    background-color: #fff8e7 !important;
+    background-image: radial-gradient(#222 1.5px, transparent 1.5px) !important;
+    background-size: 16px 16px !important;
+    color: #1a1a1a !important;
+    font-family: 'Patrick Hand', cursive, sans-serif !important;
+}
+
+html[data-theme="comic"] body::before,
+body.comic-theme::before {
+    display: none !important;
+}
+
+/* Comic Cards & Containers */
+html[data-theme="comic"] .glass-card,
+html[data-theme="comic"] .table-card,
+html[data-theme="comic"] .generator-box,
+html[data-theme="comic"] .auth-box,
+html[data-theme="comic"] .chat-container,
+html[data-theme="comic"] .plan-card,
+html[data-theme="comic"] .flow-box,
+html[data-theme="comic"] .review-card,
+html[data-theme="comic"] .profile-card,
+html[data-theme="comic"] .profile-box,
+html[data-theme="comic"] .app-sidebar,
+html[data-theme="comic"] .modal-content,
+body.comic-theme .glass-card,
+body.comic-theme .table-card,
+body.comic-theme .generator-box,
+body.comic-theme .auth-box,
+body.comic-theme .chat-container,
+body.comic-theme .plan-card,
+body.comic-theme .flow-box,
+body.comic-theme .review-card,
+body.comic-theme .profile-card,
+body.comic-theme .profile-box,
+body.comic-theme .app-sidebar,
+body.comic-theme .modal-content {
+    background: #fffdf5 !important;
+    border: 3.5px solid #222222 !important;
+    box-shadow: 5px 5px 0px #222222 !important;
+    border-radius: 14px !important;
+    backdrop-filter: none !important;
+    transition: transform 0.15s ease, box-shadow 0.15s ease !important;
+}
+
+/* Comic Card Hover */
+html[data-theme="comic"] .glass-card:hover,
+html[data-theme="comic"] .plan-card:hover,
+body.comic-theme .glass-card:hover,
+body.comic-theme .plan-card:hover {
+    transform: translate(-2px, -2px) !important;
+    box-shadow: 7px 7px 0px #222222 !important;
+}
+
+/* Comic Headings */
+html[data-theme="comic"] h1,
+html[data-theme="comic"] h2,
+html[data-theme="comic"] h3,
+html[data-theme="comic"] h4,
+html[data-theme="comic"] .section-title,
+html[data-theme="comic"] .brand-title,
+body.comic-theme h1,
+body.comic-theme h2,
+body.comic-theme h3,
+body.comic-theme h4,
+body.comic-theme .section-title,
+body.comic-theme .brand-title {
+    font-family: 'Bangers', cursive, sans-serif !important;
+    letter-spacing: 1.5px !important;
+    color: #222222 !important;
+    text-shadow: 2px 2px 0px #ffcc00 !important;
+    -webkit-text-fill-color: #222222 !important;
+}
+
+/* Comic Buttons */
+html[data-theme="comic"] .btn-primary,
+html[data-theme="comic"] .btn-action,
+html[data-theme="comic"] button.primary-btn,
+body.comic-theme .btn-primary,
+body.comic-theme .btn-action,
+body.comic-theme button.primary-btn {
+    background: #ff3366 !important;
+    color: #ffffff !important;
+    border: 3px solid #222222 !important;
+    box-shadow: 4px 4px 0px #222222 !important;
+    font-family: 'Bangers', cursive !important;
+    font-size: 1.1rem !important;
+    letter-spacing: 1px !important;
+    border-radius: 10px !important;
+    transition: transform 0.1s ease, box-shadow 0.1s ease !important;
+}
+
+html[data-theme="comic"] .btn-primary:hover,
+html[data-theme="comic"] .btn-action:hover,
+body.comic-theme .btn-primary:hover,
+body.comic-theme .btn-action:hover {
+    background: #ff1f56 !important;
+    transform: translate(-2px, -2px) rotate(-1deg) !important;
+    box-shadow: 6px 6px 0px #222222 !important;
+}
+
+html[data-theme="comic"] .btn-secondary,
+body.comic-theme .btn-secondary {
+    background: #0066ff !important;
+    color: #ffffff !important;
+    border: 3px solid #222222 !important;
+    box-shadow: 4px 4px 0px #222222 !important;
+    font-family: 'Bangers', cursive !important;
+    border-radius: 10px !important;
+}
+
+html[data-theme="comic"] .btn-secondary:hover,
+body.comic-theme .btn-secondary:hover {
+    transform: translate(-2px, -2px) rotate(1deg) !important;
+    box-shadow: 6px 6px 0px #222222 !important;
+}
+
+/* Comic Inputs */
+html[data-theme="comic"] input,
+html[data-theme="comic"] select,
+html[data-theme="comic"] textarea,
+body.comic-theme input,
+body.comic-theme select,
+body.comic-theme textarea {
+    background: #ffffff !important;
+    border: 2.5px solid #222222 !important;
+    box-shadow: 3px 3px 0px #222222 !important;
+    color: #222222 !important;
+    font-family: 'Patrick Hand', cursive !important;
+    font-size: 1.05rem !important;
+    border-radius: 8px !important;
+}
+
+html[data-theme="comic"] input:focus,
+html[data-theme="comic"] select:focus,
+html[data-theme="comic"] textarea:focus,
+body.comic-theme input:focus,
+body.comic-theme select:focus,
+body.comic-theme textarea:focus {
+    outline: none !important;
+    border-color: #0066ff !important;
+    box-shadow: 4px 4px 0px #0066ff !important;
+}
+
+/* Comic Sidebar & Navigation */
+html[data-theme="comic"] .sidebar-link.active,
+body.comic-theme .sidebar-link.active {
+    background: #ffcc00 !important;
+    color: #222222 !important;
+    border: 2.5px solid #222222 !important;
+    box-shadow: 3px 3px 0px #222222 !important;
+    font-weight: bold !important;
+}
+
+/* Comic Badges */
+html[data-theme="comic"] .badge,
+html[data-theme="comic"] .badge-vip,
+html[data-theme="comic"] .badge-admin,
+body.comic-theme .badge,
+body.comic-theme .badge-vip,
+body.comic-theme .badge-admin {
+    border: 2px solid #222222 !important;
+    box-shadow: 2px 2px 0px #222222 !important;
+    font-family: 'Bangers', cursive !important;
+    letter-spacing: 0.5px !important;
+}
+
+/* Comic Tables */
+html[data-theme="comic"] table,
+body.comic-theme table {
+    border: 3px solid #222222 !important;
+}
+
+html[data-theme="comic"] th,
+body.comic-theme th {
+    background: #ffcc00 !important;
+    color: #222222 !important;
+    border-bottom: 3px solid #222222 !important;
+    font-family: 'Bangers', cursive !important;
+    font-size: 1.1rem !important;
+}
+
+html[data-theme="comic"] td,
+body.comic-theme td {
+    border-bottom: 1.5px solid #222222 !important;
+}

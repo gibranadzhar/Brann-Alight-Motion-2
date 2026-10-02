@@ -3740,7 +3740,7 @@
     }
 
     function normalizeThemePreference(value) {
-        return ['light', 'dark', 'system'].indexOf(value) !== -1 ? value : 'system';
+        return ['light', 'dark', 'comic', 'system'].indexOf(value) !== -1 ? value : 'system';
     }
 
     function readThemePreference() {
@@ -3770,13 +3770,19 @@
     function applyThemePreference(preference) {
         var choice = normalizeThemePreference(preference);
         var dark = choice === 'dark' || (choice === 'system' && isSystemDark());
+        var comic = choice === 'comic';
+        var resolvedTheme = comic ? 'comic' : (dark ? 'dark' : 'light');
         document.documentElement.dataset.themePreference = choice;
-        document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+        document.documentElement.dataset.theme = resolvedTheme;
         document.documentElement.style.colorScheme = dark ? 'dark' : 'light';
         var themeMeta = document.querySelector('meta[name="theme-color"]');
-        if (themeMeta) themeMeta.setAttribute('content', dark ? '#0B0F19' : '#F8FAFC');
+        if (themeMeta) {
+            var metaColors = { dark: '#0B0F19', comic: '#fff8e7', light: '#F8FAFC' };
+            themeMeta.setAttribute('content', metaColors[resolvedTheme] || '#F8FAFC');
+        }
         document.body.classList.toggle('dark-theme', dark);
-        document.body.classList.toggle('light-theme', !dark);
+        document.body.classList.toggle('light-theme', !dark && !comic);
+        document.body.classList.toggle('comic-theme', comic);
 
         var trigger = $('btn-theme-menu');
         if (trigger) {

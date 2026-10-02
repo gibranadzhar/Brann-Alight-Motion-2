@@ -4,137 +4,306 @@
    ========================================================= */
 
 :root {
-    /* Base palette: quiet slate canvas + one indigo/cyan accent family. */
-    --ds-ink-950: #0f172a;
-    --ds-ink-900: #172033;
-    --ds-ink-800: #1e293b;
-    --ds-slate-700: #334155;
-    --ds-slate-600: #475569;
-    --ds-slate-500: #64748b;
-    --ds-slate-400: #94a3b8;
-    --ds-slate-300: #cbd5e1;
-    --ds-slate-200: #e2e8f0;
-    --ds-slate-100: #f1f5f9;
-    --ds-slate-50: #f8fafc;
-    --ds-white: #ffffff;
+    /* 1. "Frost" (Light Theme) */
+    --ds-page: #faf8f5;
+    --ds-surface: rgba(255, 255, 255, 0.92);
+    --ds-surface-solid: #ffffff;
+    --ds-surface-muted: #fdfcfa;
+    --ds-surface-subtle: rgba(30, 30, 50, 0.03);
+
+    --ds-text: #1a1a2e;
+    --ds-text-secondary: #6b7280;
+    --ds-text-muted: #9ca3af;
+    --ds-text-faint: #d1d5db;
 
     --ds-accent: #4f46e5;
     --ds-accent-strong: #4338ca;
-    --ds-accent-cyan: #0891b2;
-    --ds-accent-cyan-strong: #0e7490;
-    --ds-accent-soft: rgba(79, 70, 229, .10);
-    --ds-accent-line: rgba(79, 70, 229, .28);
+    --ds-accent-secondary: #f59e0b;
+    --ds-accent-soft: rgba(79, 70, 229, 0.10);
+    --ds-accent-line: rgba(79, 70, 229, 0.28);
+    --ds-gradient: linear-gradient(135deg, var(--ds-accent), var(--ds-accent-secondary));
 
-    /* Purposeful semantic states only. */
+    --ds-border: rgba(30, 30, 50, 0.10);
+    --ds-border-subtle: rgba(30, 30, 50, 0.05);
+    --ds-border-strong: rgba(30, 30, 50, 0.20);
+
+    /* Layered shadows for depth */
+    --ds-shadow-sm: 0 2px 4px rgba(30, 30, 50, 0.05);
+    --ds-shadow-md: 0 4px 6px -1px rgba(30, 30, 50, 0.05), 0 2px 4px -1px rgba(30, 30, 50, 0.03);
+    --ds-shadow-lg: 0 10px 15px -3px rgba(30, 30, 50, 0.05), 0 4px 6px -2px rgba(30, 30, 50, 0.025);
+    --ds-shadow: var(--ds-shadow-lg);
+    --ds-shadow-soft: var(--ds-shadow-md);
+
+    /* Status colors */
     --ds-success: #0f766e;
     --ds-success-bg: #ccfbf1;
     --ds-success-line: #99f6e4;
-    --ds-warning: #a16207;
+    --ds-warning: #b45309;
     --ds-warning-bg: #fef3c7;
     --ds-warning-line: #fde68a;
     --ds-danger: #be123c;
     --ds-danger-bg: #ffe4e6;
     --ds-danger-line: #fecdd3;
-    --ds-netflix: #e50914;
-    --ds-netflix-soft: rgba(229, 9, 20, .12);
-    --ds-netflix-line: rgba(229, 9, 20, .30);
-    --ds-netflix-gradient: linear-gradient(135deg, #b20710, var(--ds-netflix));
     --ds-info: #1d4ed8;
     --ds-info-bg: #dbeafe;
     --ds-info-line: #bfdbfe;
+    
+    --ds-netflix: #e50914;
+    --ds-netflix-soft: rgba(229, 9, 20, 0.12);
+    --ds-netflix-line: rgba(229, 9, 20, 0.30);
+    --ds-netflix-gradient: linear-gradient(135deg, #b20710, var(--ds-netflix));
 
-    /* Semantic roles used by legacy selectors and new UI. */
-    --ds-page: #f4f7fb;
-    --ds-surface: rgba(255, 255, 255, .94);
-    --ds-surface-solid: var(--ds-white);
-    --ds-surface-muted: var(--ds-slate-50);
-    --ds-surface-subtle: rgba(15, 23, 42, .035);
-    --ds-text: var(--ds-ink-950);
-    --ds-text-secondary: var(--ds-slate-600);
-    --ds-text-muted: var(--ds-slate-500);
-    --ds-text-faint: var(--ds-slate-400);
-    --ds-border: rgba(15, 23, 42, .12);
-    --ds-border-subtle: rgba(15, 23, 42, .075);
-    --ds-border-strong: rgba(15, 23, 42, .20);
-    --ds-shadow: 0 18px 45px rgba(15, 23, 42, .08);
-    --ds-shadow-soft: 0 8px 24px rgba(15, 23, 42, .055);
-    --ds-gradient: linear-gradient(135deg, var(--ds-accent), var(--ds-accent-cyan));
-    --ds-gradient-soft: linear-gradient(135deg, rgba(79, 70, 229, .12), rgba(8, 145, 178, .09));
-    --ds-code-surface: var(--ds-ink-950);
-    --ds-code-text: var(--ds-slate-200);
+    --ds-code-surface: #1a1a2e;
+    --ds-code-text: #e2e8f0;
 
-    /* Compatibility map: old components now resolve to the same palette. */
+    /* Border Radius */
+    --radius-sm: 4px;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+
+    /* Fonts */
+    --font-primary: 'Inter', sans-serif;
+    --font-heading: 'Inter', sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+
+    /* Grain texture for background */
+    --ds-grain: url('data:image/svg+xml;utf8,<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"><filter id="noiseFilter"><feTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" stitchTiles="stitch"/></filter><rect width="100%" height="100%" filter="url(%23noiseFilter)" opacity="0.05"/></svg>');
+
+    /* Compatibility Map */
     --bg-primary: var(--ds-page);
     --bg-secondary: var(--ds-surface-solid);
     --bg-card: var(--ds-surface-solid);
-    --bg-sidebar: var(--ds-ink-900);
+    --bg-sidebar: #faf8f5;
     --border-color: var(--ds-border);
     --border-color-hover: var(--ds-border-strong);
     --text-primary: var(--ds-text);
     --text-secondary: var(--ds-text-secondary);
     --text-muted: var(--ds-text-muted);
     --accent-primary: var(--ds-accent);
-    --accent-secondary: var(--ds-accent-cyan);
+    --accent-secondary: var(--ds-accent-secondary);
     --accent-gradient: var(--ds-gradient);
-    --accent-gradient-hover: linear-gradient(135deg, var(--ds-accent-strong), var(--ds-accent-cyan-strong));
+    --accent-gradient-hover: linear-gradient(135deg, var(--ds-accent-strong), #d97706);
     --success: var(--ds-success);
     --success-bg: var(--ds-success-bg);
     --error: var(--ds-danger);
     --error-bg: var(--ds-danger-bg);
     --pending: var(--ds-warning);
     --pending-bg: var(--ds-warning-bg);
+
+    --ds-brand: var(--ds-accent);
+    --ds-brand-strong: var(--ds-accent-strong);
+    --ds-brand-soft: var(--ds-accent-soft);
+    --ds-overlay: rgba(30, 30, 50, 0.56);
+    --ds-control-hover: var(--ds-accent-soft);
+    --ds-code-line: rgba(148, 163, 184, 0.22);
+    --ds-focus-ring: 0 0 0 4px var(--ds-accent-soft);
 }
 
-/* Dark mode remains the same system, not a second unrelated theme. */
-body.dark-theme {
+body::before {
+    content: "";
+    position: fixed;
+    top: 0; left: 0; width: 100vw; height: 100vh;
+    background-image: var(--ds-grain);
+    pointer-events: none;
+    z-index: -1;
+}
+
+/* 2. "Midnight" (Dark Theme) */
+body.dark-theme, html[data-theme="dark"] body {
+    --ds-page: #09090b;
+    --ds-surface: rgba(20, 20, 25, 0.75);
+    --ds-surface-solid: #141419;
+    --ds-surface-muted: #1a1a22;
+    --ds-surface-subtle: rgba(255, 255, 255, 0.05);
+
+    --ds-text: #f4f4f5;
+    --ds-text-secondary: #a1a1aa;
+    --ds-text-muted: #71717a;
+    --ds-text-faint: #52525b;
+
+    --ds-accent: #06b6d4;
+    --ds-accent-strong: #0891b2;
+    --ds-accent-secondary: #a78bfa;
+    --ds-accent-soft: rgba(6, 182, 212, 0.15);
+    --ds-accent-line: rgba(6, 182, 212, 0.35);
+    --ds-gradient: linear-gradient(135deg, var(--ds-accent), var(--ds-accent-secondary));
+
+    --ds-border: rgba(255, 255, 255, 0.08);
+    --ds-border-subtle: rgba(255, 255, 255, 0.04);
+    --ds-border-strong: rgba(255, 255, 255, 0.16);
+
+    /* Deep shadows with colored glow hints */
+    --ds-shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.4);
+    --ds-shadow-md: 0 8px 16px rgba(0, 0, 0, 0.5), 0 0 8px rgba(6, 182, 212, 0.05);
+    --ds-shadow-lg: 0 16px 32px rgba(0, 0, 0, 0.6), 0 0 16px rgba(167, 139, 250, 0.1);
+    --ds-shadow: var(--ds-shadow-lg);
+    --ds-shadow-soft: var(--ds-shadow-md);
+
+    /* Status colors */
+    --ds-success: #10b981;
+    --ds-success-bg: rgba(16, 185, 129, 0.15);
+    --ds-success-line: rgba(16, 185, 129, 0.3);
+    --ds-warning: #f59e0b;
+    --ds-warning-bg: rgba(245, 158, 11, 0.15);
+    --ds-warning-line: rgba(245, 158, 11, 0.3);
+    --ds-danger: #f43f5e;
+    --ds-danger-bg: rgba(244, 63, 94, 0.15);
+    --ds-danger-line: rgba(244, 63, 94, 0.3);
+    --ds-info: #3b82f6;
+    --ds-info-bg: rgba(59, 130, 246, 0.15);
+    --ds-info-line: rgba(59, 130, 246, 0.3);
+
     --ds-netflix: #ff5a62;
     --ds-netflix-soft: rgba(255, 90, 98, .16);
     --ds-netflix-line: rgba(255, 90, 98, .38);
     --ds-netflix-gradient: linear-gradient(135deg, #b91c1c, var(--ds-netflix));
-    --ds-page: #0b1220;
-    --ds-surface: rgba(17, 24, 39, .94);
-    --ds-surface-solid: #111827;
-    --ds-surface-muted: #172033;
-    --ds-surface-subtle: rgba(148, 163, 184, .08);
-    --ds-text: #f8fafc;
-    --ds-text-secondary: #cbd5e1;
-    --ds-text-muted: #94a3b8;
-    --ds-text-faint: #64748b;
-    --ds-border: rgba(148, 163, 184, .20);
-    --ds-border-subtle: rgba(148, 163, 184, .13);
-    --ds-border-strong: rgba(148, 163, 184, .32);
-    --ds-shadow: 0 20px 48px rgba(2, 6, 23, .30);
-    --ds-shadow-soft: 0 10px 26px rgba(2, 6, 23, .22);
-    --ds-code-surface: #080e19;
+
+    --ds-code-surface: #050506;
     --ds-code-text: #e2e8f0;
-    --ds-success-bg: rgba(20, 184, 166, .16);
-    --ds-success-line: rgba(45, 212, 191, .38);
-    --ds-warning-bg: rgba(234, 179, 8, .16);
-    --ds-warning-line: rgba(250, 204, 21, .38);
-    --ds-danger-bg: rgba(244, 63, 94, .16);
-    --ds-danger-line: rgba(251, 113, 133, .38);
-    --ds-info-bg: rgba(59, 130, 246, .16);
-    --ds-info-line: rgba(96, 165, 250, .38);
 
     --bg-primary: var(--ds-page);
     --bg-secondary: var(--ds-surface-solid);
     --bg-card: var(--ds-surface-solid);
-    --bg-sidebar: #080e19;
+    --bg-sidebar: #050506;
     --border-color: var(--ds-border);
     --border-color-hover: var(--ds-border-strong);
     --text-primary: var(--ds-text);
     --text-secondary: var(--ds-text-secondary);
     --text-muted: var(--ds-text-muted);
-    --accent-primary: #818cf8;
-    --accent-secondary: #22d3ee;
+    --accent-primary: var(--ds-accent);
+    --accent-secondary: var(--ds-accent-secondary);
     --accent-gradient: var(--ds-gradient);
-    --accent-gradient-hover: linear-gradient(135deg, var(--ds-accent), var(--ds-accent-cyan));
-    --success: #2dd4bf;
+    --accent-gradient-hover: linear-gradient(135deg, var(--ds-accent-strong), #8b5cf6);
+    --success: var(--ds-success);
     --success-bg: var(--ds-success-bg);
-    --error: #fb7185;
+    --error: var(--ds-danger);
     --error-bg: var(--ds-danger-bg);
-    --pending: #facc15;
+    --pending: var(--ds-warning);
     --pending-bg: var(--ds-warning-bg);
+
+    --ds-brand: var(--ds-accent);
+    --ds-brand-strong: var(--ds-accent-strong);
+    --ds-brand-soft: var(--ds-accent-soft);
+    --ds-overlay: rgba(0, 0, 0, 0.75);
+    --ds-control-hover: rgba(6, 182, 212, 0.15);
+    --ds-code-line: rgba(255, 255, 255, 0.1);
+    --ds-focus-ring: 0 0 0 4px rgba(6, 182, 212, 0.25);
+}
+
+body.dark-theme .btn-primary {
+    box-shadow: 0 0 12px rgba(6, 182, 212, 0.4) !important;
+}
+body.dark-theme .glass-card {
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.5), 0 0 8px rgba(167, 139, 250, 0.05) !important;
+}
+
+/* 3. "Pop!" (Comic Theme) */
+html[data-theme="comic"], html[data-theme="comic"] body {
+    --ds-page: #fff8e7;
+    --ds-surface: #fffdf5;
+    --ds-surface-solid: #fffdf5;
+    --ds-surface-muted: #f5eedc;
+    --ds-surface-subtle: rgba(0, 0, 0, 0.05);
+
+    --ds-text: #222222;
+    --ds-text-secondary: #555555;
+    --ds-text-muted: #777777;
+    --ds-text-faint: #999999;
+
+    --ds-accent: #ff3366;
+    --ds-accent-strong: #e62e5c;
+    --ds-accent-secondary: #0066ff;
+    --ds-accent-yellow: #ffcc00;
+    --ds-accent-soft: rgba(255, 51, 102, 0.15);
+    --ds-accent-line: #222222;
+    --ds-gradient: linear-gradient(135deg, var(--ds-accent), var(--ds-accent-secondary));
+
+    --ds-border: #222222;
+    --ds-border-subtle: #222222;
+    --ds-border-strong: #222222;
+
+    /* Hard shadows */
+    --ds-shadow-sm: 2px 2px 0 #222222;
+    --ds-shadow-md: 4px 4px 0 #222222;
+    --ds-shadow-lg: 6px 6px 0 #222222;
+    --ds-shadow: var(--ds-shadow-md);
+    --ds-shadow-soft: var(--ds-shadow-sm);
+
+    /* Comic variables */
+    --comic-outline: 3px solid #222222;
+    --comic-shadow: 4px 4px 0 #222222;
+    --comic-shadow-hover: 6px 6px 0 #222222;
+    --comic-font-heading: 'Bangers', cursive, 'Inter', sans-serif;
+    --comic-font-body: 'Patrick Hand', cursive, 'Inter', sans-serif;
+    --comic-rotation: -0.5deg;
+    --comic-dot-pattern: radial-gradient(#222 1px, transparent 1px);
+    
+    --ds-success: #00cc66;
+    --ds-success-bg: #ccffcc;
+    --ds-success-line: #222222;
+    --ds-warning: #ffcc00;
+    --ds-warning-bg: #ffffcc;
+    --ds-warning-line: #222222;
+    --ds-danger: #ff3333;
+    --ds-danger-bg: #ffcccc;
+    --ds-danger-line: #222222;
+    --ds-info: #0066ff;
+    --ds-info-bg: #cce0ff;
+    --ds-info-line: #222222;
+
+    --ds-netflix: #ff3333;
+    --ds-netflix-soft: #ffcccc;
+    --ds-netflix-line: #222222;
+    --ds-netflix-gradient: linear-gradient(135deg, #ff3333, #e60000);
+
+    --ds-code-surface: #222222;
+    --ds-code-text: #fffdf5;
+
+    --bg-primary: var(--ds-page);
+    --bg-secondary: var(--ds-surface-solid);
+    --bg-card: var(--ds-surface-solid);
+    --bg-sidebar: #fff8e7;
+    --border-color: var(--ds-border);
+    --border-color-hover: var(--ds-border);
+    --text-primary: var(--ds-text);
+    --text-secondary: var(--ds-text-secondary);
+    --text-muted: var(--ds-text-muted);
+    --accent-primary: var(--ds-accent);
+    --accent-secondary: var(--ds-accent-secondary);
+    --accent-gradient: var(--ds-gradient);
+    --accent-gradient-hover: linear-gradient(135deg, var(--ds-accent-strong), #005ce6);
+    --success: var(--ds-success);
+    --success-bg: var(--ds-success-bg);
+    --error: var(--ds-danger);
+    --error-bg: var(--ds-danger-bg);
+    --pending: var(--ds-warning);
+    --pending-bg: var(--ds-warning-bg);
+
+    --ds-brand: var(--ds-accent);
+    --ds-brand-strong: var(--ds-accent-strong);
+    --ds-brand-soft: var(--ds-accent-yellow);
+    --ds-overlay: rgba(34, 34, 34, 0.8);
+    --ds-control-hover: var(--ds-accent-yellow);
+    --ds-code-line: #555555;
+    --ds-focus-ring: 0 0 0 4px var(--ds-accent-yellow);
+
+    --font-primary: var(--comic-font-body);
+    --font-heading: var(--comic-font-heading);
+}
+
+html[data-theme="comic"] body {
+    font-family: var(--font-primary) !important;
+}
+
+html[data-theme="comic"] .section-title,
+html[data-theme="comic"] .card-title,
+html[data-theme="comic"] .stat-card-value,
+html[data-theme="comic"] .docs-title,
+html[data-theme="comic"] h1,
+html[data-theme="comic"] h2,
+html[data-theme="comic"] h3 {
+    font-family: var(--font-heading) !important;
+    letter-spacing: 1px;
 }
 
 html { color-scheme: light; }
