@@ -6,7 +6,7 @@ import { getClientIP, sendJSON, readBody, getUsers, saveUsers, readJSON, writeJS
 import { runAutoCleanup } from '../utils/autocleanup.js';
 import { listAnnouncements, getAnnouncement, createAnnouncement, updateAnnouncement, deleteAnnouncement } from '../utils/announcements.js';
 import { CHAT_CLIENTS, createTransaction } from '../utils/chat.js';
-import { generatePaymentQRIS } from '../utils/qris.js';
+import { generatePaymentQRIS, generateQrisNominal, verifyGopayPayment, QRIS_STATIS_BASE } from '../utils/qris.js';
 
 // Panel H2H (atlantich2h.com) — API key disimpan di data/settings.json -> h2h.apiKey
 const H2H_API_URL = 'https://atlantich2h.com/get_profile';
@@ -839,14 +839,53 @@ async function handleAPI(req, res, url) {
         }
     }
 
-    /* ---------- PAYMENT (LEGACY QRIS) ---------- */
-    if (pathname.startsWith('/api/payment/status/') && method === 'GET') {
+    /* ---------- PAYMENT (AUTOMATIC QRIS & GO-MERCHANT) ---------- */
+    if ((pathname.startsWith('/api/payment/status/') || pathname.startsWith('/api/payment/check/')) && (method === 'GET' || method === 'POST')) {
         const transactionId = decodeURIComponent(pathname.split('/').pop());
         const txs = readJSON('transactions', []);
         const tx = txs.find(function (t) { return t.transaction_id === transactionId; });
         if (!tx) return sendJSON(res, 404, { success: false, message: 'Transaksi tidak ditemukan.' });
+
+        if (tx.status === 'success') {
+            return sendJSON(res, 200, { success: true, status: 'success', message: 'Pembayaran sudah dikonfirmasi.' });
+        }
+
+        // Verifikasi pembayaran otomatis dengan Railway Merchant API
+        try {
+            const verified = await verifyGopayPayment(tx.amount, tx.createdAt || Date.now());
+            if (verified) {
+                tx.status = 'success';
+                tx.paidAt = new Date().toISOString();
+                writeJSON('transactions', txs);
+
+                // Auto-upgrade role user di database
+                const users = getUsers();
+                const u = users[tx.username];
+                if (u) {
+                    u.role = tx.role;
+                    if (tx.days) {
+                        const exp = new Date();
+                        exp.setDate(exp.getDate() + tx.days);
+                        u.roleExpiry = exp.toISOString();
+                    }
+                    prepareApiRole(u);
+                    saveUsers(users);
+                    addLog('[PAYMENT AUTO-UPGRADE] User ' + tx.username + ' berhasil upgrade ke ' + tx.role + ' (' + tx.days + ' hari)');
+                }
+
+                return sendJSON(res, 200, {
+                    success: true,
+                    status: 'success',
+                    message: 'Pembayaran Rp ' + tx.amount + ' terdeteksi! Akun Anda telah di-upgrade otomatis ke ' + tx.role.toUpperCase() + '.'
+                });
+            }
+        } catch (e) {
+            console.error('[PAYMENT AUTO-CHECK ERROR]', e.message);
+        }
+
         return sendJSON(res, 200, { success: true, status: tx.status });
     }
+
     if (pathname === '/api/payment/cancel' && method === 'POST') {
         return sendJSON(res, 200, { success: true, message: 'Pembayaran dibatalkan.' });
     }
@@ -868,17 +907,37 @@ async function handleAPI(req, res, url) {
         const serverPrice = (PLAN_PRICES[role][days] != null) ? PLAN_PRICES[role][days] : null;
         if (serverPrice == null) return sendJSON(res, 400, { success: false, message: 'Harga paket tidak tersedia.' });
         const baseAmount = serverPrice;
-        // Fee acak sebagai kode verifikasi unik (100-900, step 100)
-        const fee = (Math.floor(Math.random() * 9) + 1) * 100;
+        // Fee acak unik sebagai kode verifikasi (100 - 999)
+        const fee = Math.floor(Math.random() * 900) + 100;
         const amount = baseAmount + fee;
         const transactionId = generateOrderId();
-        const expiresAt = new Date(Date.now() + 30 * 60 * 1000).toISOString();
-        createTransaction(user.username, transactionId, amount, role);
+        const expiresAt = new Date(Date.now() + 20 * 60 * 1000).toISOString();
+
+        const qrString = generateQrisNominal(QRIS_STATIS_BASE, amount);
         const payment = await generatePaymentQRIS(amount);
+
+        const txs = readJSON('transactions', []);
+        const newTx = {
+            transaction_id: transactionId,
+            username: user.username,
+            role: role,
+            days: days,
+            amount: amount,
+            baseAmount: baseAmount,
+            fee: fee,
+            status: 'pending',
+            qrString: qrString,
+            createdAt: Date.now(),
+            expiresAt: expiresAt
+        };
+        txs.push(newTx);
+        writeJSON('transactions', txs);
+        createTransaction(user.username, transactionId, amount, role);
+
         return sendJSON(res, 200, {
             success: true,
             order: { transaction_id: transactionId, amount: amount, baseAmount: baseAmount, fee: fee, days: days, expiresAt: expiresAt },
-            payment: { qr: { url: payment.imageUrl }, qrString: payment.qrString },
+            payment: { qr: { url: payment.imageUrl }, qrString: qrString },
         });
     }
 
