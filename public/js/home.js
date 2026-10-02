@@ -313,7 +313,7 @@
     var MOBILE_MENU_GROUPS = [
         { label: 'Statistik Live', leaf: 'dashboard' },
         { label: 'Fitur Utama', children: ['generator', 'netflix', 'history'] },
-        { label: 'Akun & Layanan', children: ['purchase', 'lifetime', 'referral'] },
+        { label: 'Akun & Layanan', children: ['purchase', 'apiguide', 'lifetime', 'referral'] },
         { label: 'Support & Komunitas', children: ['chat', 'tickets', 'reviews', 'contributors'] },
         { label: 'Support & APK', children: ['whatsapp', 'apk'] },
         { label: 'Pengaturan Admin', children: ['admin', 'settings'] }
@@ -390,7 +390,7 @@
         });
         function findLink(kind) {
             for (var i = 0; i < links.length; i++) {
-                if (kind === 'whatsapp' && /whatsapp\.com\/channel|wa\.me|whatsapp/i.test(links[i].href)) return links[i];
+                if (kind === 'whatsapp' && /whatsapp\.com\/channel|wa\.me|whatsapp|t\.me/i.test(links[i].href)) return links[i];
                 if (kind === 'apk' && /\.apk($|\?)/i.test(links[i].href)) return links[i];
             }
             return null;
@@ -1856,6 +1856,72 @@
         if (copyBtn) {
             copyBtn.disabled = !hasApiKey;
             copyBtn.setAttribute('aria-disabled', hasApiKey ? 'false' : 'true');
+        }
+
+        // ==================== CUSTOM ORDER ID PREFIX (VIP & OWNER ONLY) ====================
+        var prefixInput = $('custom-order-prefix-input');
+        var prefixBtn = $('btn-save-order-prefix');
+        var prefixPreview = $('prefix-example-preview');
+        var isVipOrOwner = ['vip', 'owner'].indexOf(u.role) !== -1;
+
+        var updatePrefixPreview = function (val) {
+            val = (val || '').trim();
+            if (prefixPreview) {
+                prefixPreview.textContent = val ? (val + '-0001') : 'GPA.5926.6296.2753.27637';
+            }
+        };
+
+        if (prefixInput && prefixBtn) {
+            if (!isVipOrOwner) {
+                prefixInput.value = '';
+                prefixInput.placeholder = '🔒 Khusus Pengguna VIP & Owner';
+                prefixInput.disabled = true;
+                prefixBtn.disabled = true;
+                prefixBtn.innerHTML = '<i class="fa-solid fa-lock"></i> <span>VIP ONLY</span>';
+                updatePrefixPreview('');
+            } else {
+                prefixInput.disabled = false;
+                prefixBtn.disabled = false;
+                prefixBtn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> <span>SIMPAN PREFIX</span>';
+                
+                api('/api/auth/get-order-prefix').then(function (d) {
+                    if (d && d.success) {
+                        prefixInput.value = d.prefix || '';
+                        updatePrefixPreview(d.prefix || '');
+                    }
+                }).catch(function () {
+                    prefixInput.value = u.customOrderPrefix || '';
+                    updatePrefixPreview(u.customOrderPrefix || '');
+                });
+
+                if (!prefixInput.dataset.bound) {
+                    prefixInput.dataset.bound = '1';
+                    prefixInput.addEventListener('input', function () {
+                        updatePrefixPreview(prefixInput.value);
+                    });
+                }
+
+                if (!prefixBtn.dataset.bound) {
+                    prefixBtn.dataset.bound = '1';
+                    prefixBtn.addEventListener('click', function () {
+                        var val = prefixInput.value.trim();
+                        prefixBtn.disabled = true;
+                        api('/api/auth/save-order-prefix', { method: 'POST', body: { prefix: val } }).then(function (res) {
+                            prefixBtn.disabled = false;
+                            if (res && res.success) {
+                                if (currentUser) currentUser.customOrderPrefix = val;
+                                updatePrefixPreview(val);
+                                Swal.fire({ icon: 'success', title: 'Berhasil!', text: res.message || 'Prefix Order ID berhasil disimpan.', timer: 1500, showConfirmButton: false });
+                            } else {
+                                Swal.fire({ icon: 'error', title: 'Gagal', text: (res && res.message) ? res.message : 'Gagal menyimpan prefix.' });
+                            }
+                        }).catch(function (err) {
+                            prefixBtn.disabled = false;
+                            Swal.fire({ icon: 'error', title: 'Error', text: err.message || 'Terjadi kesalahan server.' });
+                        });
+                    });
+                }
+            }
         }
 
         var copyApiKey = function (text) {
