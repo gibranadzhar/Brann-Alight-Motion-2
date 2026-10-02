@@ -1131,11 +1131,8 @@ async function handleWaitingLink(bot, chatId, state, text) {
     const result = await callLocalAPI(bot, 'activate', { email: email, magicLink: link });
     
     if (result && result.success) {
-        // Order ID dalam format GPA.XXXX-XXXX-XXXX-XXXXX (diteruskan dari hasil API am.js).
         const apiCode = result.orderId || result.codeorder || result.data?.orderId || result.data?.codeorder;
-        const orderId = apiCode
-            ? (String(apiCode).startsWith('GPA.') ? String(apiCode) : `GPA.${gpaSeg()}-${gpaSeg()}-${gpaSeg()}-${String(apiCode).replace(/^Alwayscodex-/i, '')}`)
-            : generateOrderId();
+        const orderId = apiCode ? String(apiCode) : generateOrderId();
         
         // Update user stats
         if (!globalThis.__amTelegramUsers[userId]) {

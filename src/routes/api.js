@@ -691,12 +691,19 @@ async function handleAPI(req, res, url) {
         }
 
         const users = getUsers();
-        user.customOrderPrefix = prefix || '';
-        if (!prefix && user.customOrderPrefixCounter) user.customOrderPrefixCounter = {};
-        // Inisialisasi counter jika belum ada
-        if (!user.customOrderPrefixCounter) user.customOrderPrefixCounter = {};
-        users[user.username] = user;
-        saveUsers(users);
+        let targetKey = user.username;
+        for (const k of Object.keys(users)) {
+            if (users[k].id === user.id || k.toLowerCase() === (user.username || '').toLowerCase()) {
+                targetKey = k;
+                break;
+            }
+        }
+        if (users[targetKey]) {
+            users[targetKey].customOrderPrefix = prefix || '';
+            if (!prefix && users[targetKey].customOrderPrefixCounter) users[targetKey].customOrderPrefixCounter = {};
+            if (!users[targetKey].customOrderPrefixCounter) users[targetKey].customOrderPrefixCounter = {};
+            saveUsers(users);
+        }
 
         addLog('[SISTEM] ' + user.username + ' menyimpan custom order prefix: ' + prefix);
         return sendJSON(res, 200, { success: true, message: 'Prefix berhasil disimpan.', prefix: prefix });
