@@ -210,7 +210,25 @@ export function addDuplicateLog(message) {
 
 /* ============================== LAIN-LAIN ============================== */
 
-export function generateOrderId() {
+export function generateOrderId(user) {
+    if (user && user.customOrderPrefix) {
+        if (!user.customOrderPrefixCounter) user.customOrderPrefixCounter = { count: 0 };
+        const count = (user.customOrderPrefixCounter.count || 0) + 1;
+        user.customOrderPrefixCounter.count = count;
+        const users = getUsers();
+        let targetKey = user.username;
+        for (const k of Object.keys(users)) {
+            if (users[k].id === user.id || k.toLowerCase() === (user.username || '').toLowerCase()) {
+                targetKey = k;
+                break;
+            }
+        }
+        if (users[targetKey]) {
+            users[targetKey].customOrderPrefixCounter = user.customOrderPrefixCounter;
+            saveUsers(users);
+        }
+        return `${user.customOrderPrefix}-${String(count).padStart(4, '0')}`;
+    }
     const d = (n) => String(crypto.randomInt(0, Math.pow(10, n))).padStart(n, '0');
     return 'GPA.' + d(4) + '-' + d(4) + '-' + d(4) + '-' + d(5);
 }

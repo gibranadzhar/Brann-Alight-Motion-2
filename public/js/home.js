@@ -1043,8 +1043,6 @@
             return;
         }
 
-        // Load custom order prefix for VIP/Owner
-        loadCustomOrderPrefix();
         if (!$('btn-autogen-run').dataset.bound) {
             $('btn-autogen-run').dataset.bound = '1';
             $('btn-autogen-run').addEventListener('click', function (e) {
@@ -1087,71 +1085,6 @@
                 });
                 lines.push('Total Berhasil: ' + currentBatch.results.length + ' Akun');
                 downloadText(lines.join('\n'), 'am-premium-batch.txt');
-            });
-        }
-    }
-
-    // ==================== CUSTOM ORDER PREFIX (VIP + OWNER) ====================
-    function loadCustomOrderPrefix() {
-        var isVipOwner = currentUser && (currentUser.role === 'vip' || currentUser.role === 'owner');
-        var input = $('custom-order-prefix-input');
-        var btn = $('btn-save-order-prefix');
-        var badge = $('prefix-vip-badge');
-        var feedback = $('prefix-save-feedback');
-
-        if (!isVipOwner) {
-            if (badge) badge.classList.remove('hidden');
-            if (input) input.disabled = true;
-            if (btn) btn.disabled = true;
-            return;
-        }
-
-        // Enable for VIP/Owner
-        if (input) input.disabled = false;
-        if (btn) btn.disabled = false;
-        if (badge) badge.classList.add('hidden');
-
-        // Load saved prefix
-        api('/api/auth/get-order-prefix').then(function (data) {
-            if (data.success && data.prefix) {
-                if (input) input.value = data.prefix;
-            }
-        }).catch(function () {});
-
-        // Save handler
-        if (btn && !btn.dataset.bound) {
-            btn.dataset.bound = '1';
-            btn.addEventListener('click', function () {
-                var prefix = input.value.trim();
-                // Kosong diperbolehkan = hapus prefix (Order ID kembali ke default).
-                // Basic client-side validation (server validates too)
-                if (prefix && !/^[a-zA-Z0-9_-]+$/.test(prefix)) {
-                    showFeedback(feedback, 'Prefix hanya boleh huruf, angka, _, -', 'error');
-                    return;
-                }
-                if (prefix.length > 20) {
-                    showFeedback(feedback, 'Prefix maksimal 20 karakter.', 'error');
-                    return;
-                }
-
-                btn.disabled = true;
-                btn.innerHTML = '<span class="btn-spinner"><i class="fa-solid fa-spinner fa-spin"></i> Menyimpan...</span>';
-
-                api('/api/auth/save-order-prefix', { method: 'POST', body: { prefix: prefix } })
-                    .then(function (data) {
-                        if (data.success) {
-                            showFeedback(feedback, '✓ Prefix berhasil disimpan', 'success');
-                        } else {
-                            showFeedback(feedback, '✗ ' + (data.message || 'Gagal menyimpan'), 'error');
-                        }
-                    })
-                    .catch(function (err) {
-                        showFeedback(feedback, '✗ ' + errMsg(err), 'error');
-                    })
-                    .finally(function () {
-                        btn.disabled = false;
-                        btn.innerHTML = '<span class="btn-text"><i class="fa-solid fa-floppy-disk"></i> SIMPAN PREFIX</span>';
-                    });
             });
         }
     }
