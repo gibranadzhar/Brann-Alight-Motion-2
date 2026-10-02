@@ -1376,7 +1376,7 @@
                 '*Kode Verifikasi (Fee):* ' + fmtRp(fee) + '\n' +
                 '*Total Dibayar:* ' + fmtRp(Number(order.amount || 0)) + '\n' +
                 '\nMohon dicek dan role diaktifkan ya. Terima kasih!';
-            var waHref = 'https://wa.me/6288297563383?text=' + encodeURIComponent(waMessage);
+            var waHref = 'https://t.me/brannnn22?text=' + encodeURIComponent(waMessage);
             var endTime = new Date(order.expiresAt).getTime();
             var timer = null;
 
