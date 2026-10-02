@@ -173,6 +173,55 @@ app.post('/api/auth/login-apikey', (req, res) => {
     }
 });
 
+// User token setup for their API Key
+app.post('/api/auth/user-tokens', async (req, res) => {
+    try {
+        const { apikey, accessToken, refreshToken } = req.body;
+        if (!apikey || !apiKeyManager.isValid(apikey)) {
+            return res.status(401).json({ success: false, error: 'API Key tidak valid!' });
+        }
+        if (!accessToken || !refreshToken) {
+            return res.status(400).json({ success: false, error: 'Access token dan refresh token wajib diisi!' });
+        }
+        // Test access token validity
+        try {
+            await sdk.getMe(accessToken);
+        } catch (e) {
+            return res.status(400).json({ 
+                success: false, 
+                error: 'Access token GoPay tidak valid! ' + (e.response?.data?.message || e.message)
+            });
+        }
+        apiKeyManager.setTokens(apikey, accessToken, refreshToken);
+        res.json({
+            success: true,
+            message: 'Token GoPay berhasil disimpan untuk API Key Anda!'
+        });
+    } catch (e) {
+        res.status(400).json({ success: false, error: e.message });
+    }
+});
+
+// User key status and token info
+app.post('/api/auth/user-key-info', (req, res) => {
+    try {
+        const { apikey } = req.body;
+        if (!apikey || !apiKeyManager.isValid(apikey)) {
+            return res.status(401).json({ success: false, error: 'API Key tidak valid!' });
+        }
+        const keyData = apiKeyManager.getKey(apikey);
+        res.json({
+            success: true,
+            key: keyData.key,
+            label: keyData.label,
+            hasTokens: !!(keyData.tokens && keyData.tokens.accessToken && keyData.tokens.refreshToken),
+            lastRefresh: keyData.tokens ? keyData.tokens.lastRefresh : null
+        });
+    } catch (e) {
+        res.status(400).json({ success: false, error: e.message });
+    }
+});
+
 // List all API keys (Owner only)
 app.get('/api/auth/apikeys', (req, res) => {
     if (!req.session.passwordVerified) {
@@ -339,29 +388,33 @@ app.get('/api/history', async (req, res) => {
     }
 });
 
-// ⭐ AUTO-MANAGED HISTORY API - Supports /api/history/auto/:apikey? (or ?apikey=... or x-api-key header)
+// ⭐ AUTO-MANAGED HISTORY API - Per-API-Key Multi-Tenant Auto History
 const handleAutoHistory = async (req, res) => {
     try {
-        // Cek apakah tokens sudah tersimpan di server oleh Owner
-        if (!tokenManager.hasTokens()) {
-            return res.status(401).json({
-                success: false,
-                error: 'Tokens GoMerchant belum di-setup oleh Owner! Silahkan hubungi Owner.'
-            });
-        }
-
-        // Check API Key via URL param, query param, or header
-        const reqApiKey = req.params.apikey || req.query.apikey || req.headers['x-api-key'];
+        const reqApiKey = req.params.apikey || req.query.apikey || req.body?.apikey || req.headers['x-api-key'];
         const isOwnerSession = !!req.session.passwordVerified;
 
-        if (!isOwnerSession && (!reqApiKey || !apiKeyManager.isValid(reqApiKey))) {
+        let userTokens = null;
+
+        if (reqApiKey && apiKeyManager.isValid(reqApiKey)) {
+            userTokens = apiKeyManager.getTokens(reqApiKey);
+        } else if (isOwnerSession) {
+            userTokens = tokenManager.hasTokens() ? tokenManager.getTokens() : null;
+        } else {
             return res.status(401).json({
                 success: false,
-                error: 'API Key tidak valid atau belum diisi! Gunakan URL format /api/history/auto/:apikey atau parameter ?apikey=...'
+                error: 'API Key tidak valid atau belum diisi! Gunakan URL format /api/history/auto/:apikey'
             });
         }
 
-        const { accessToken, refreshToken } = tokenManager.getTokens();
+        if (!userTokens || !userTokens.accessToken || !userTokens.refreshToken) {
+            return res.status(400).json({
+                success: false,
+                error: 'Token GoPay untuk API Key ini belum di-setup! Silahkan lakukan Setup Token di portal Login API Key.'
+            });
+        }
+
+        const { accessToken, refreshToken } = userTokens;
 
         try {
             // Try fetch dengan current token
@@ -416,14 +469,18 @@ const handleAutoHistory = async (req, res) => {
         } catch (e) {
             // Jika current token error, coba refresh otomatis
             if (e.response?.status === 401 || e.message.includes('401')) {
-                console.log('🔄 Current token expired, trying auto-refresh...');
+                console.log(`🔄 Token expired for key ${reqApiKey || 'owner'}, trying auto-refresh...`);
                 
                 try {
                     const refreshResult = await sdk.refreshToken(refreshToken);
                     const newAccessToken = refreshResult.data.access_token;
                     
-                    // Update token yang tersimpan
-                    tokenManager.updateAccessToken(newAccessToken);
+                    // Update token yang tersimpan di apiKeyManager / tokenManager
+                    if (reqApiKey && apiKeyManager.isValid(reqApiKey)) {
+                        apiKeyManager.updateAccessToken(reqApiKey, newAccessToken);
+                    } else if (isOwnerSession) {
+                        tokenManager.updateAccessToken(newAccessToken);
+                    }
                     console.log('✅ Token auto-refreshed successfully!');
 
                     // Retry fetch dengan token baru
@@ -477,7 +534,7 @@ const handleAutoHistory = async (req, res) => {
                 } catch (refreshErr) {
                     return res.status(401).json({
                         success: false,
-                        error: 'Token expired dan refresh gagal! Silahkan setup ulang token di /auth/token-setup',
+                        error: 'Token expired dan refresh gagal! Silahkan setup ulang token GoPay di portal Login API Key.',
                         refreshError: refreshErr.response?.data || refreshErr.message
                     });
                 }

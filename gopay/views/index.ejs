@@ -799,13 +799,40 @@
                     </div>
                 </form>
 
-                <!-- Saved Key Status -->
-                <div id="activeKeyBanner" class="hidden p-4 bg-emerald-50 border-2 border-emerald-500 rounded-sm flex items-center justify-between">
-                    <div>
-                        <span class="text-xs font-bold uppercase text-emerald-700 block">Status Login API Key:</span>
-                        <code id="activeKeyText" class="font-bold text-black text-sm"></code>
+                <!-- Saved Key Status & GoPay Token Setup -->
+                <div id="activeKeyBanner" class="hidden space-y-4">
+                    <div class="p-4 bg-emerald-50 border-2 border-emerald-500 rounded-sm flex items-center justify-between">
+                        <div>
+                            <span class="text-xs font-bold uppercase text-emerald-700 block">Status Login API Key:</span>
+                            <code id="activeKeyText" class="font-bold text-black text-sm"></code>
+                            <div id="userKeyTokenStatusText" class="text-xs mt-1 font-semibold text-slate-700">Memuat status token...</div>
+                        </div>
+                        <button onclick="logoutApiKey()" class="text-xs font-bold text-red-600 underline">Logout Key</button>
                     </div>
-                    <button onclick="logoutApiKey()" class="text-xs font-bold text-red-600 underline">Logout Key</button>
+
+                    <!-- User GoPay Token Setup Form -->
+                    <div class="p-4 border-2 border-black rounded-sm bg-yellow-50 space-y-3">
+                        <h4 class="font-black text-sm text-black flex items-center gap-2">
+                            <i data-lucide="key-round" class="w-4 h-4 text-amber-600"></i>
+                            ⚡ Setup Token GoPay (Khusus Akun Anda)
+                        </h4>
+                        <p class="text-xs text-gray-600 leading-relaxed">
+                            Masukkan <strong>access_token</strong> dan <strong>refresh_token</strong> dari akun GoPay Merchant Anda. Token tersimpan aman dan otomatis di-refresh untuk API Key Anda.
+                        </p>
+                        <form onsubmit="handleUserTokenSave(event)" class="space-y-3">
+                            <div>
+                                <label class="block text-xs font-bold mb-1">Access Token GoPay</label>
+                                <input type="text" id="userAccessTokenInput" placeholder="access_token_gopay_anda" class="w-full px-3 py-2 border-2 border-black rounded-sm font-mono text-xs focus:outline-none focus:border-blue-500" required>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold mb-1">Refresh Token GoPay</label>
+                                <input type="text" id="userRefreshTokenInput" placeholder="refresh_token_gopay_anda" class="w-full px-3 py-2 border-2 border-black rounded-sm font-mono text-xs focus:outline-none focus:border-blue-500" required>
+                            </div>
+                            <button type="submit" class="btn-primary text-xs py-2.5 px-4 w-full flex items-center justify-center gap-2">
+                                <i data-lucide="save" class="w-4 h-4"></i> Simpan Token GoPay Saya
+                            </button>
+                        </form>
+                    </div>
                 </div>
 
                 <!-- API Integration Guide -->
@@ -945,6 +972,7 @@ curl -X GET "https://brann-merchant-production.up.railway.app/api/history/auto/<
                 });
                 const paramInput = document.getElementById('param-api-history-auto-apikey');
                 if (paramInput) paramInput.value = key;
+                fetchUserKeyInfo(key);
             } else {
                 banner.classList.add('hidden');
                 text.textContent = '';
@@ -952,6 +980,60 @@ curl -X GET "https://brann-merchant-production.up.railway.app/api/history/auto/<
                     const el = document.getElementById(id);
                     if (el) el.textContent = 'BRANN-XXXXX';
                 });
+            }
+        }
+
+        async function fetchUserKeyInfo(key) {
+            const statusEl = document.getElementById('userKeyTokenStatusText');
+            try {
+                const res = await fetch('/api/auth/user-key-info', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ apikey: key })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    if (data.hasTokens) {
+                        statusEl.innerHTML = `<span class="text-emerald-700 font-bold">✅ Token GoPay Aktif</span> (Refresh: ${data.lastRefresh ? new Date(data.lastRefresh).toLocaleString('id-ID') : '-'})`;
+                    } else {
+                        statusEl.innerHTML = `<span class="text-amber-700 font-bold">⚠️ Token GoPay Belum Di-Setup</span> — Isi form di bawah ini agar API Key aktif!`;
+                    }
+                } else {
+                    statusEl.innerHTML = `<span class="text-red-600 font-bold">❌ Error: ${data.error}</span>`;
+                }
+            } catch (e) {
+                statusEl.innerHTML = `<span class="text-red-600 font-bold">❌ Gagal memuat status: ${e.message}</span>`;
+            }
+        }
+
+        async function handleUserTokenSave(e) {
+            e.preventDefault();
+            const apikey = localStorage.getItem('merchantApiKey');
+            const accessToken = getVal('userAccessTokenInput');
+            const refreshToken = getVal('userRefreshTokenInput');
+
+            if (!apikey) {
+                showToast('❌ Login dengan API Key terlebih dahulu!', '❌');
+                return;
+            }
+
+            try {
+                const res = await fetch('/api/auth/user-tokens', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ apikey, accessToken, refreshToken })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showToast('✅ Token GoPay berhasil disimpan!', '✅');
+                    document.getElementById('userAccessTokenInput').value = '';
+                    document.getElementById('userRefreshTokenInput').value = '';
+                    fetchUserKeyInfo(apikey);
+                } else {
+                    showToast('❌ ' + data.error, '❌');
+                }
+            } catch (err) {
+                showToast('❌ Error: ' + err.message, '❌');
             }
         }
 
@@ -1048,9 +1130,10 @@ curl -X GET "https://brann-merchant-production.up.railway.app/api/history/auto/<
             listEl.innerHTML = keys.map(k => `
                 <div class="p-3 bg-white border-2 border-black rounded-sm flex items-center justify-between gap-3 flex-wrap text-xs">
                     <div>
-                        <div class="font-bold text-sm text-black flex items-center gap-2">
+                        <div class="font-bold text-sm text-black flex items-center gap-2 flex-wrap">
                             <span>${k.label || 'API Key'}</span>
                             <span class="text-[10px] bg-slate-200 px-2 py-0.5 rounded font-mono">${k.createdAt ? new Date(k.createdAt).toLocaleDateString('id-ID') : ''}</span>
+                            ${k.tokens ? '<span class="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded">GoPay: Ready</span>' : '<span class="text-[10px] bg-amber-100 text-amber-800 font-bold px-2 py-0.5 rounded">GoPay: Belum Setup</span>'}
                         </div>
                         <code class="font-mono text-blue-700 font-bold select-all">${k.key}</code>
                     </div>
